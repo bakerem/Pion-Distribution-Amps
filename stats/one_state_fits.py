@@ -5,8 +5,10 @@ from scipy.optimize import curve_fit, fsolve
 
 
 Nt = 128
-Pz = 0
-save = True
+Pz = 8
+save = False
+p0 = (10**7, 0.78)
+bounds = ([0,0.6],[np.inf,1.3])
 
 # create list of columns for df
 if Pz < 4:
@@ -19,10 +21,11 @@ for i in range(0,Ns):
     columns.append(f"{i}")
 
 # read in data as pandas dataframe 
+
 if Pz < 4:
-    df = pd.read_csv(f"/home/bakerem/ANL/stats/c2pt-data/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",names=columns, dtype=np.float64)
+    df = pd.read_csv(f"stats/c2pt-data/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",names=columns, dtype=np.float64)
 else:
-    df = pd.read_csv(f"/home/bakerem/ANL/stats/c2pt-data/64IGSRC_W40_k6.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",names=columns, dtype=np.float64)
+    df = pd.read_csv(f"stats/c2pt-data/64IGSRC_W40_k6.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",names=columns, dtype=np.float64)
 
 
 df_data = df.drop(axis="columns", labels=["t"])
@@ -51,8 +54,7 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         return y
 
     # curve fitting and calculating chi squared
-    p0 = (10**7, 0.06)
-    bounds = ([0,0.05],[np.inf,0.2])
+
     popt, pcov = curve_fit(
                     obj_func, df["t"].iloc[lower_lim:upper_lim], 
                     df["mean"].iloc[lower_lim:upper_lim], 
@@ -123,7 +125,7 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         plt.plot(df["t"].iloc[lower_lim:upper_lim], obj_func(df["t"].iloc[lower_lim:upper_lim],*popt))
         # plt.yscale("log")
         tab_cols = ("Value", "Error")
-        tab_rows = ("A0", "E0", "$\chi^2$")
+        tab_rows = ("A0", "E0", r"$\chi^2$")
         cells = [["%.2e" %popt[0], "%.2e" %np.sqrt(pcov[0,0])]\
                 ,["%.2e" %popt[1],"%.2e" %np.sqrt(pcov[1,1])]\
                 ,["%.3f" %chi2, "n/a"]]
@@ -152,7 +154,7 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         plt.ylabel("$m_eff$")
         plt.title(f"Nz = {Pz}")
         tab_cols = ("Value", "Error")
-        tab_rows = ("$m_{eff}$", "$\chi^2$")
+        tab_rows = ("$m_{eff}$", r"$\chi^2$")
         cells = [["%.2e" %popt_meff[0], "%.2e" %np.sqrt(pcov_meff[0,0])]\
                 ,["%.3f" %chi2_meff, "n/a"]]
         plt.table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="upper center", colWidths=[0.2,0.2])
@@ -163,7 +165,7 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
 
 lower_t = 3
 upper_t = 20
-lower_window = 10
+lower_window = 8
 upper_window = 20
 best_chi2 = 1000
 best_i = 0
@@ -171,7 +173,7 @@ best_j = 0
 for i in range(lower_t, upper_t):
     for j in range(lower_window, upper_window):
         chi2 = perform_fit(i,i+j, plot_raw=False, plot_meff=False)
-        if abs(chi2 - 1)  < abs(best_chi2 - 1):
+        if chi2  < best_chi2:
             best_chi2 = chi2
             best_i = i
             best_j = j 

@@ -11,7 +11,7 @@ for i in range(0,trials):
     errs[i] = np.sqrt(np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[1])
     chi2s[i] = np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[2]
 
-
+print(np.load(f"stats/fit_results/E0data_1state_Pz{8}.npy")[3])
 def phys_p(a,n):
     # takes a as an energy in GeV
     return 2*np.pi*n*a/64
@@ -22,7 +22,7 @@ print((np.sqrt(E0s[0]*2.359)**2+phys_p(2.359,np.arange(0,10))**2)/2.359)
 
 plt.figure()
 plt.errorbar(phys_ps,(2.359*E0s), 
-             yerr=2*errs,
+             yerr=errs,
              capsize=5, 
              fmt=".", 
              label="From Fit")
