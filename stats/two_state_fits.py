@@ -4,11 +4,20 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit, fsolve
 
 
+"""
+Ethan Baker, Haverford College/ANL
+Uses a two-state three parameter fit for fitting C2pt data. E0 is fixed
+from the dispersion relation. Pz gives the momentum of the data in 
+simulation units, p0 is an initial guess for fitting and bounds are bounds
+for the fit. 
+"""
+
 Nt = 128
-Pz = 2
+Pz = 1
 save = False
-p0 = (2e8, 1e8, 0.5)
-bounds = ([1e2, 1e2, 0.06], [np.inf, np.inf, 1.5])
+p0 = (1e8, 1e8, 0.57)
+# p0 = None
+bounds = ([1e5,1e5,0], [1e9, 1e9, 2])
 
 # create list of columns for df
 if Pz < 4:
@@ -85,15 +94,16 @@ def perform_fit(lower_lim, upper_lim, plot=False):
         sigma=df["std dev"].iloc[lower_lim:upper_lim],
         absolute_sigma=True,
         p0=p0,
-        maxfev=2000,
         bounds=bounds,
+        maxfev=2000,
     )
 
     chi2 = np.sum(
         (df["mean"].iloc[lower_lim:upper_lim]
             - obj_func(df["t"].iloc[lower_lim:upper_lim], *popt)
         ) ** 2
-        / (df["std dev"].iloc[lower_lim:upper_lim]) ** 2
+        / (df["std dev"].iloc[lower_lim:upper_lim]) ** 2 
+        / (upper_lim - lower_lim - len(popt))
     )
 
     # data saving routine
@@ -125,9 +135,9 @@ def perform_fit(lower_lim, upper_lim, plot=False):
         tab_cols = ("Value", "Error")
         tab_rows = ("A0", "A1", "E1", "$\chi^2$")
         cells = [
-            ["%.2e" % popt[0], "%.2e" % np.sqrt(pcov[0, 0])],
+            ["%.2e" %popt[0], "%.2e" % np.sqrt(pcov[0, 0])],
             ["%.2e" % popt[1], "%.2e" % np.sqrt(pcov[1, 1])],
-            ["%.2e" % popt[2], "%.2e" % np.sqrt(pcov[2, 2])],
+            ["%.2e" %(2.359*popt[2]), "%.2e" %(2.359*np.sqrt(pcov[2, 2]))],
             ["%.3f" % chi2, "n/a"],
         ]
         plt.table(
@@ -149,41 +159,38 @@ def perform_fit(lower_lim, upper_lim, plot=False):
 
 
 lower_t = 2
-upper_t = 3
-lower_window = 5
-upper_window = 15
-best_chi2 = 1000
-best_i = 0
-best_j = 0
+upper_t = 7
+
 plt.figure()
 for i in range(lower_t, upper_t):
-    for j in range(lower_window, upper_window):
-        dof = j - 2
-        chi2, E1_fit, E1_err = perform_fit(i,i + j, plot=False)
-        plt.errorbar(j, E1_fit, E1_err, fmt="rs", capsize=4)
-        plt.xlabel(r"$a t_{max}$")
-        plt.ylabel(r"$E_1(P_z)$ (Gev)")
-        plt.text(11, 0.9, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
-        plt.title(r"Fitted $E_1$ from [2a, $t_{max}a$]")
-        if chi2 < best_chi2:
-            best_chi2 = chi2
-            best_i = i
-            best_j = j
-            print(best_chi2, best_i, best_j)
-plt.savefig(f"stats/2state_fit_results/window_length_Pz{Pz}.png")
+    chi2, E1_fit, E1_err = perform_fit(i,i+10, plot=False)
+    print(chi2,2.359*E1_fit, 2.359*E1_err)
+    plt.errorbar(i, 2.359*E1_fit, 2.359*E1_err, fmt="rs", capsize=4)
+    plt.xlabel(r"$a t_{min}$")
+    plt.ylabel(r"$E_1(P_z)$ (Gev)")
+    plt.ylim(0,4)
+    plt.text(3, 
+             3.5, 
+             "Pz = %.2fGeV" %phys_p(2.359, Pz), 
+             fontfamily="sans-serif", 
+             fontsize="large", 
+             fontstyle="normal")
+    plt.title(r"Fitted $E_1$ from [$t_{min}a$, $t_{min}a + 10$]")
+if save == True:
+    plt.savefig(f"stats/2state_fit_results/window_length_Pz{Pz}.png")
 plt.show()
-perform_fit(best_i, best_i + best_j, plot=True)
+perform_fit(2, 12, plot=True)
 
-plt.figure()
-plt.plot(np.arange(lower_t, upper_t+1), E1_fits)
-plt.xlabel(r"$t_{min}$")
-plt.ylabel(r"$E_1$")
-plt.title(r"$E_1$ for various $t_{min}")
-plt.show()
+# plt.figure()
+# plt.plot(np.arange(lower_t, upper_t+1), E1_fits)
+# plt.xlabel(r"$t_{min}$")
+# plt.ylabel(r"$E_1$")
+# plt.title(r"$E_1$ for various $t_{min}")
+# plt.show()
 
-plt.figure()
-plt.plot(np.arange(lower_t, upper_t+1), chi2_list)
-plt.xlabel(r"$t_{min}$")
-plt.ylabel(r"$\chi^2$")
-plt.title(r"$\chi^2$ for various $t_{min}")
-plt.show()
+# plt.figure()
+# plt.plot(np.arange(lower_t, upper_t+1), chi2_list)
+# plt.xlabel(r"$t_{min}$")
+# plt.ylabel(r"$\chi^2$")
+# plt.title(r"$\chi^2$ for various $t_{min}")
+# plt.show()

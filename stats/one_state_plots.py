@@ -1,6 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+"""
+Ethan Baker, Haverford College/ANL
+script for producing plots from fitting over multiple momenta in order
+to test that the fitted results conform to the dispersion relation
+"""
 trials = 10
 E0s = np.zeros((trials,))
 errs = np.zeros((trials,))
@@ -9,7 +14,7 @@ chi2s = np.zeros((trials,))
 for i in range(0,trials):
     E0s[i] = np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[0]
     errs[i] = np.sqrt(np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[1])
-    chi2s[i] = np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[2]
+    chi2s[i] = np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[3]
 
 print(np.load(f"stats/fit_results/E0data_1state_Pz{8}.npy")[3])
 def phys_p(a,n):
@@ -22,7 +27,7 @@ print((np.sqrt(E0s[0]*2.359)**2+phys_p(2.359,np.arange(0,10))**2)/2.359)
 
 plt.figure()
 plt.errorbar(phys_ps,(2.359*E0s), 
-             yerr=errs,
+             yerr=2.359*errs,
              capsize=5, 
              fmt=".", 
              label="From Fit")
@@ -32,7 +37,7 @@ plt.plot(phys_p(2.359,np.arange(0,trials, 0.05)),
 plt.ylabel("Energy (GeV)")
 plt.xlabel("$P_z$ (GeV)")
 plt.legend()
-plt.savefig("stats/fit_results/1_state_multi_p.png")
+plt.savefig("stats/fit_results/1_state_multi_p.pdf")
 plt.show()
 
 plt.figure()

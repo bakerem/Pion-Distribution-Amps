@@ -1,6 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+"""
+Ethan Baker, Haverford College/ANL
+script for producing plots from fitting over multiple momenta in order
+to test that the fitted results conform to the dispersion relation
+"""
+
 trials = 10
 E0s = np.zeros((trials,))
 E0_errs = np.zeros((trials,))
@@ -39,7 +46,7 @@ plt.fill_between(t1, y1, y2, alpha=0.2, color="orange")
 plt.ylabel("Energy (GeV)")
 plt.xlabel("$P_z$ (GeV)")
 plt.legend()
-# plt.savefig("stats/2state_fit_results/2_state_multi_p.png")
+plt.savefig("stats/2state_fit_results/2_state_multi_p.pdf")
 plt.show()
 
 plt.figure()
@@ -47,5 +54,5 @@ plt.plot(phys_ps, chi2s, "s")
 plt.title("Chi-Square Values for Various Pz")
 plt.xlabel("Pz (GeV)")
 plt.ylabel("$\chi^2$")
-# plt.savefig("stats/2state_fit_results/chi2_over_p.png")
+plt.savefig("stats/2state_fit_results/chi2_over_p.png")
 plt.show()
