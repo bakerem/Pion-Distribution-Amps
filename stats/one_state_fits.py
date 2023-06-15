@@ -6,26 +6,26 @@ from scipy.optimize import curve_fit, fsolve
 """
 Ethan Baker, Haverford College/ANL
 Uses a one-state two-parameter fit for fitting C2pt data. Pz gives the
- momentum of the data in simulation units, p0 is an initial guess for 
+momentum of the data in simulation units, p0 is an initial guess for 
 fitting and bounds are bounds for the fit. 
 """
 
 Nt = 128
-Pz = 7
+Pz = 0
 save = False
-p0 = (10**5, 1)
-bounds = ([10**2,0],[10**10,5])
+p0 = (7e8, 0.05)
+bounds = ([1e6,0],[1e10,10])
 
+lower_t = 2
+upper_t = 40
+window = 15
 # create list of columns for df
 if Pz < 4:
     Ns = 29
 else:
     Ns = 30
 
-columns = ["t"]
-for i in range(0,Ns):
-    columns.append(f"{i}")
-
+columns = ["t"] + [str(i) for i in range(0, Ns)]
 # read in data as pandas dataframe 
 
 if Pz < 4:
@@ -46,22 +46,34 @@ std_devs = np.sqrt(Ns-1)*np.std(samples, axis = 0)
 df["mean"] = means
 df["std dev"] = std_devs
 
+# calculation of covariance matrix 
 
-# initialize empty lists for plotting later
-E0_fits    = []
-E0_errs    = []
-E0_chi2    = []
-A0_fits    = []
-m_eff_fits = []
-m_eff_errs = []
-m_eff_chi2 = []
-# objective function for fitting
+cov = np.zeros((Nt, Nt))
+for i in range(0,Nt):
+    for j in range(Nt):
+        cov[i,j] = np.average((df_data.iloc[i] - means[i])*
+                              (df_data.iloc[j] - means[j]))
+cov = cov/(Ns-1)
+
+# plt.figure()
+# plt.plot(df["t"], 
+#          np.abs(np.log(abs(df["mean"]/df["mean"].shift(-1,fill_value=df["mean"].iloc[0])))),
+#         )
+# title = r"ln$(C(n)/C(n+1))$" + f" for Nz={Pz}"
+# plt.title(title)
+# plt.xlabel(r"n_t")
+# plt.ylabel(r"ln$(C(n)/C(n+1))$")
+# plt.savefig(f"stats/fit_results/Pz{Pz}_logplot")
+# plt.show()
+
 
 # function to convert nz to physical Pz
 def phys_p(a, n):
     # takes a as an energy in GeV
     return 2 * np.pi * n * a / 64
 
+
+# main function for fitting routine
 def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
     def obj_func(t,A0, E0):
         y = A0*np.exp(-t*E0) + A0*np.exp(-(Nt-t)*E0)  
@@ -72,23 +84,23 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
     popt, pcov = curve_fit(
                     obj_func, df["t"].iloc[lower_lim:upper_lim], 
                     df["mean"].iloc[lower_lim:upper_lim], 
-                    sigma=df["std dev"].iloc[lower_lim:upper_lim],
+                    sigma = cov[lower_lim:upper_lim,lower_lim:upper_lim],
+                    # sigma=df["std dev"].iloc[lower_lim:upper_lim],
                     p0=p0, 
                     bounds=bounds,
-                    maxfev=2000)
+                    maxfev=2000,
+                    # method="dogbox",
+                    )
 
     chi2 = np.sum(
             (df["mean"].iloc[lower_lim:upper_lim]-
             obj_func(df["t"].iloc[lower_lim:upper_lim],*popt))**2/
             (df["std dev"].iloc[lower_lim:upper_lim])**2) / (upper_lim - lower_lim - len(popt))
 
-    A0_fits.append(popt[0])
-    E0_fits.append(popt[1])
-    E0_errs.append(np.sqrt(pcov[1,1]))
-    E0_chi2.append(chi2)
+
     # #data saving routine
     if save == True:
-        new_data = np.array((popt[1],pcov[1,1], popt[0], chi2))
+        new_data = np.array((popt[1],pcov[1,1], popt[0], pcov[0,0], chi2))
         # data = np.concatenate((prev_data, new_data))
         np.save(f"stats/fit_results/E0data_1state_Pz{Pz}.npy", new_data)
 
@@ -125,13 +137,12 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
                     obj_func_meff, 
                     df["t"].iloc[lower_lim:upper_lim], 
                     roots[lower_lim:upper_lim],
-                    sigma=roots_err[lower_lim:upper_lim])
+                    sigma=roots_err[lower_lim:upper_lim],
+                    method="lm")
 
     chi2_meff = np.sum((roots[lower_lim:upper_lim]-obj_func_meff(df["t"].iloc[lower_lim:upper_lim],*popt_meff))**2 \
                        / roots_err[lower_lim:upper_lim]**2) / (upper_lim - lower_lim - len(popt))
-    m_eff_fits.append(popt_meff)
-    m_eff_errs.append(np.sqrt(pcov_meff[0,0]))
-    m_eff_chi2.append(chi2_meff)
+
 
     #######PLOTS#######
     if plot_raw == True:
@@ -175,29 +186,36 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         plt.title(f"Nz = {Pz}")
         tab_cols = ("Value", "Error")
         tab_rows = ("$m_{eff}$", r"$\chi^2$")
-        cells = [["%.2e" %2.359*popt_meff[0], "%.2e" %2.359*np.sqrt(pcov_meff[0,0])]\
+        cells = [["%.2e" %(2.359*popt_meff[0]), "%.2e" %(2.359*np.sqrt(pcov_meff[0,0]))]\
                 ,["%.3f" %chi2_meff, "n/a"]]
         plt.table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="upper center", colWidths=[0.2,0.2])
         if save == True:
             plt.savefig(f"stats/fit_results/Pz{Pz}_meff.png")
         plt.show()
-    return chi2, popt[1], np.sqrt(pcov[1,1])
+    return chi2, popt[1], np.sqrt(pcov[1,1]), popt[0], np.sqrt(pcov[0,0])
 
 
 # creates plot of E_0 fitted at each t_min ranging from lower_t to upper_t.
-lower_t = 2
-upper_t = 25
-plt.figure()
+fit_results = np.zeros((4,upper_t-lower_t))
 for i in range(lower_t, upper_t):
-    chi2, E1_fit, E1_err = perform_fit(i,i+20, plot_raw=False)
-    print(i, chi2, 2.359*E1_fit, 2.359*E1_err)
-    plt.errorbar(i, 2.359*E1_fit, 2.359*E1_err, fmt="rs", capsize=4)
-    plt.xlabel(r"$a t_{min}$")
-    plt.ylabel(r"$E_0(P_z)$ (Gev)")
-    plt.ylim(0,4)
-    plt.text(3,3.5, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
-    plt.title(r"Fitted $E_0$ from [$t_{min}a$, $t_{min}a$ + 20]")
-    plt.savefig(f"stats/fit_results/window_length_Pz{Pz}.png")
+    results = perform_fit(i,i+window, plot_raw=False)
+    fit_results[0,i-lower_t] = results[1] # save E0
+    fit_results[1,i-lower_t] = results[2] # save E0 err
+    fit_results[2,i-lower_t] = results[3] # save A0
+    fit_results[3,i-lower_t] = results[4] # save A0 err
+    print(i, results[0], 2.359*results[1], 2.359*results[2])
+
+plt.figure()
+plt.errorbar(np.arange(lower_t, upper_t), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
+plt.xlabel(r"$t_{min}/a$")
+plt.ylabel(r"$E_0(P_z)$ (Gev)")
+# plt.ylim(0,4)
+plt.text(7.5,0.28, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
+plt.title(r"Fitted $E_0$ from [$t_{min}/a$, $t_{min}/a$ + " + f"{window}]")
+if save == True:
+    plt.savefig(f"stats/fit_results/Pz{Pz}window_length{window}.png")
+    np.save(f"stats/fit_results/window_arrays/E0_fits_Pz{Pz}.npy", fit_results)
 plt.show()
+
 
 
