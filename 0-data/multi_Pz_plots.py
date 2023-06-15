@@ -59,10 +59,10 @@ for bz in [0,3,4,6,8]:
     real_means, imag_means, real_stds, imag_stds = read_data(Ns, Nt, init_char, Pz, bz)
     E0_data = np.load(f"stats/fit_results/window_arrays/E0_fits_Pz{Pz}.npy")
     E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
-    E0 = E0_data[0,bestE0_tmins[Pz-4]] 
-    Z0 = np.sqrt(E0_data[2,bestE0_tmins[Pz-4]])
-    E1 = E1_data[0,4]
-    Z1 = np.sqrt(E1_data[4,4])
+    E0 = E0_data[0,bestE0_tmins[Pz-4] -2 ] 
+    Z0 = np.sqrt(2*E0*E0_data[2,bestE0_tmins[Pz-4]-2])
+    E1 = E1_data[0,bestE1_tmins[Pz-4]-2]
+    Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz-4]-2])
     real_fit = real_state2ratio(np.arange(t_start,t_end,0.01),fits[f"Pz = {Pz}"][1,bz], fits[f"Pz = {Pz}"][3,bz])
     real_fit_err1 = -real_fit + real_state2ratio(np.arange(t_start,t_end,0.01),
                                     fits[f"Pz = {Pz}"][1,bz]+np.sqrt(fits[f"Pz = {Pz}"][2,bz]), 

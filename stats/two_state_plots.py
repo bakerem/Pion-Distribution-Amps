@@ -14,11 +14,11 @@ E0_errs = np.zeros((trials,))
 E1s = np.zeros((trials,))
 E1_errs = np.zeros((trials,))
 chi2s = np.zeros((trials,))
-
+best_E1_tmins = [3,3,3,4, 4,4,4, 2,4,4]
 for i in range(0,trials):
-    E1s[i] = np.load(f"stats/2state_fit_results/E0data_1state_Pz{i}.npy")[0]
-    E1_errs[i] = np.sqrt(np.load(f"stats/2state_fit_results/E0data_1state_Pz{i}.npy")[1])
-    chi2s[i] = np.load(f"stats/2state_fit_results/E0data_1state_Pz{i}.npy")[2]
+    E1s[i] = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{i}.npy")[0, best_E1_tmins[i]-2]
+    E1_errs[i] = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{i}.npy")[1, best_E1_tmins[i]-2]
+    chi2s[i] = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{i}.npy")[2, best_E1_tmins[i]-2]
 
 
 def phys_p(a,n):

@@ -6,13 +6,13 @@ from scipy.optimize import curve_fit
 import os
 from functions import read_data
 
-init_char = "T5" # can be "5", "T5", or "Z5"
+init_char = "Z5" # can be "5", "T5", or "Z5"
 Nt = 128
 t_range = np.arange(0,128)
 Ns = 10
 save = True
             #Nz= 4 5 6  7 8 9
-bestE0_tmins = [10,9,8,10,8,7] # with a window length of 15
+bestE0_tmins = [10,9,8,7,7,7] # with a window length of 15
 bestE1_tmins = [ 4,3,4, 2,4,4]              # with a window length of 10
 # set up directories for saving routines
 def phys_p(a, n):
@@ -40,14 +40,14 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     E0_data = np.load(f"stats/fit_results/window_arrays/E0_fits_Pz{Pz}.npy")
     E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
 
-    E0 = E0_data[0,bestE0_tmins[Pz-4]] 
-    Z0 = np.sqrt(2*E0*E0_data[2,bestE0_tmins[Pz-4]])
-    E1 = E1_data[0,4]
-    Z1 = np.sqrt(E1_data[4,4])
+    E0 = E0_data[0,bestE0_tmins[Pz-4] -2 ] 
+    Z0 = np.sqrt(2*E0*E0_data[2,bestE0_tmins[Pz-4]-2])
+    E1 = E1_data[0,bestE1_tmins[Pz-4]-2]
+    Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz-4]-2])
 
     """
     actual function for fitting
-    spectral decomposition of DA correlator is num and spec. decomp.
+    spectral decomposition of DA correlator is "num" and spec. decomp.
     of 2pt correlator is denom
     For T5, the numerator in both should be a sinh function, for Z5, it
     should be  cosh function

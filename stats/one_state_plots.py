@@ -12,12 +12,10 @@ E0_errs = np.zeros((trials,))
 A0s     = np.zeros((trials,))
 A0_errs = np.zeros((trials,))
 chi2s   = np.zeros((trials,))
-
+bestE0s = [20, 15, 20, 15, 10,9,8,7,7,7]
 for i in range(0,trials):
-    E0s[i]     = np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[0]
-    E0_errs[i] = np.sqrt(np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[1])
-    A0s[i]     = np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[2]
-    A0_errs[i] = np.sqrt(np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[3])
+    E0s[i]     = np.load(f"stats/fit_results/window_arrays/E0_fits_Pz{i}.npy")[0,bestE0s[i]-2]
+    E0_errs[i] = np.sqrt(np.load(f"stats/fit_results/window_arrays/E0_fits_Pz{i}.npy")[1, bestE0s[i]-2])
     chi2s[i]   = np.load(f"stats/fit_results/E0data_1state_Pz{i}.npy")[4]
 
 print(np.load(f"stats/fit_results/E0data_1state_Pz{8}.npy")[3])
@@ -41,13 +39,6 @@ plt.plot(phys_p(2.359,np.arange(0,trials, 0.05)),
 plt.ylabel("Energy (GeV)")
 plt.xlabel("$P_z$ (GeV)")
 plt.legend()
-plt.savefig("stats/fit_results/1_state_multi_p.pdf")
+# plt.savefig("stats/fit_results/1_state_multi_p.pdf")
 plt.show()
 
-plt.figure()
-plt.errorbar(phys_ps, chi2s, "s")
-plt.title("Chi-Square Values for Various Pz")
-plt.xlabel("Pz (GeV)")
-plt.ylabel("$\chi^2$")
-plt.savefig("stats/fit_results/chi2_over_p.png")
-plt.show()
