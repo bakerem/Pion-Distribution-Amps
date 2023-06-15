@@ -5,3 +5,5 @@
 test.py
 c2pt_cfgs/
 qDA_cfgs/
+__pycache__/
+.DS_Store
