@@ -3,7 +3,6 @@
 **/*.npy
 **/*.json
 test.py
-c2pt_cfgs/
-qDA_cfgs/
+*_cfgs/
 __pycache__/
 .DS_Store

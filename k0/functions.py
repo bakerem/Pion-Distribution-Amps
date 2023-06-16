@@ -8,13 +8,10 @@ def read_data(Ns, Nt, init_char, Pz, bz):
     and means
     """
     columns = ["t"] + [str(i) for i in range(0,Ns)]
-    file = h5py.File(f"0-data/qDA_cfgs/64I.qDA.ama.GSRC_W40_k6_flow05eps01.{init_char}.eta0.PX0PY0PZ{Pz}.h5")
+    file = h5py.File(f"k0/TMD_cfgs/64I.qTMDWF.ama.GSRC_W40_k0.{init_char}.eta10.PX0PY0PZ{Pz}.h5")
     DA_data = file[f"b_X/bT0/bz{bz}"]
-
-    # read in 2pt correlation data
-    c2pt = pd.read_csv(f"0-data/c2pt_cfgs/64IGSRC_W40_k6.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv", names=columns)
+    c2pt = pd.read_csv(f"k0/c2pt_cfgs/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv", names=columns)
     c2pt_data = np.array(c2pt.drop(axis="columns", labels=["t"])).transpose()
-
         
     # calculate means and error in ratio of DA/c2pt
     real_samples = np.zeros((Ns,Nt))

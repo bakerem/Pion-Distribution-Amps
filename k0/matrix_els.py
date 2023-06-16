@@ -6,16 +6,15 @@ from scipy.optimize import curve_fit
 import os
 from functions import read_data
 
-init_char = "Z5" # can be "5", "T5", or "Z5"
+init_char = "T5" # can be "5", "T5", or "Z5"
 Nt = 128
-Ns = 10
+Ns = 25
 t_range = np.arange(0,128)
 
 a = 2.359
 save = True
-            #Nz= 4 5 6  7 8 9
-bestE0_tmins = [10,9,8,7,7,7] # with a window length of 15
-bestE1_tmins = [ 4,3,4, 2,4,4]              # with a window length of 10
+
+bestE1_tmins = [4,4,4,3] # with a window length of 10
 # set up directories for saving routines
 def phys_p(a, n):
     # takes a as an energy in GeV
@@ -28,9 +27,9 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     is split up into two separate routines, each labelled "real_..." and
     "imag_...". 
     """
-         
+
     if save == True:
-            parent = "0-data/2_state_matrix_results"
+            parent = "k0/2_state_matrix_results"
             child = f"{init_char}/Pz{Pz}"
             save_path = os.path.join(parent,child)
             os.makedirs(save_path, exist_ok=True)
@@ -40,12 +39,12 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     
     # load in data from previous fits 
     # E0_data is from 1 state fit and E1_data is from 2 state fit
-    E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
+    E1_data = np.load(f"k0/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
 
     E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
-    Z0 = np.sqrt(2*E0*E1_data[3,bestE1_tmins[Pz-4]-2])
-    E1 = E1_data[0,bestE1_tmins[Pz-4]-2]
-    Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz-4]-2])
+    E1 = E1_data[0,bestE1_tmins[Pz]-2]
+    Z0 = np.sqrt(2*E0*E1_data[2,bestE1_tmins[Pz]-2])
+    Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz]-2])
 
     """
     actual function for fitting
@@ -91,6 +90,7 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
                             real_ratio_means[lower_lim:upper_lim], 
                             sigma=real_ratio_stds[lower_lim:upper_lim],
                             maxfev=2000,
+                            method="lm",
                             )
 
     imag_popt, imag_pcov = curve_fit(
@@ -99,6 +99,7 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
                             imag_ratio_means[lower_lim:upper_lim], 
                             sigma=imag_ratio_stds[lower_lim:upper_lim],
                             maxfev=2000,
+                            method="lm",
                             )
 
     real_chi2  = np.sum(
@@ -110,7 +111,7 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
             imag_state2ratio(t_range[lower_lim:upper_lim],*imag_popt))**2/    
             (imag_ratio_stds[lower_lim:upper_lim])**2) 
     real_chi2  = real_chi2 / (upper_lim - lower_lim - len(real_popt))
-    imag_chi2  = imag_chi2 / (upper_lim - lower_lim - len(real_popt))
+    imag_chi2  = imag_chi2 / (upper_lim - lower_lim - len(imag_popt))
 
 
     # plotting routine
@@ -133,7 +134,7 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
         axs[0].table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="upper center", colWidths=[0.2,0.2])
         axs[0].set_xlabel(r"$t/a$")
         axs[0].set_ylabel(r"Re $R(t) $")
-        axs[0].set_ylim(-30e-6,20e-6)
+        # axs[0].set_ylim(-30e-6,20e-6)
 
         axs[1].errorbar(t_range[lower_lim:upper_lim], 
                      imag_ratio_means[lower_lim:upper_lim], 
@@ -150,7 +151,7 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
         axs[1].table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="lower center", colWidths=[0.2,0.2])
         axs[1].set_xlabel(r"$t/a$")
         axs[1].set_ylabel(r"Imag $(R(t))$")
-        axs[1].set_ylim(-5e-6,35e-6)
+        # axs[1].set_ylim(-5e-6,35e-6)
         # plt.show()
         if save == True and bz%5==0:
             plt.savefig(f"{save_path}/Pz{Pz}_m0fit_bz{bz}.png")
@@ -160,17 +161,16 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
                     ])
 
 
-for Pz in range(4,10):
+for Pz in range(0,4):
     fit_results = np.zeros((10,33))
     print(f"Starting step {Pz}")
     if save == True:
-            parent = "0-data/2_state_matrix_results"
+            parent = "k0/2_state_matrix_results"
             child = f"{init_char}/Pz{Pz}"
             save_path = os.path.join(parent,child)
             os.makedirs(save_path, exist_ok=True)
-    for bz in range(0,33):
-        # results = perform_fit(bestE0_tmins[Pz-4],bestE0_tmins[Pz-4] + 10, bz, Pz, plot=True)
-        results = perform_fit(4,14, bz, Pz, plot=True)
+    for bz in range(0,16):
+        results = perform_fit(10,20, bz, Pz, plot=True)
         if save == True:
             fit_results[:,bz] = results
     if save == True:
