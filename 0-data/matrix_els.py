@@ -6,7 +6,7 @@ from scipy.optimize import curve_fit
 import os
 from functions import read_data
 
-init_char = "Z5" # can be "5", "T5", or "Z5"
+init_char = "T5" # can be "5", "T5", or "Z5"
 Nt = 128
 Ns = 10
 t_range = np.arange(0,128)
@@ -43,9 +43,10 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
 
     E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
-    Z0 = np.sqrt(2*E0*E1_data[3,bestE1_tmins[Pz-4]-2])
     E1 = E1_data[0,bestE1_tmins[Pz-4]-2]
+    Z0 = np.sqrt(2*E0*E1_data[2,bestE1_tmins[Pz-4]-2])
     Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz-4]-2])
+    
 
     """
     actual function for fitting

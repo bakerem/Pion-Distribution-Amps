@@ -9,7 +9,7 @@ Ns = 10
 a = 2.359
 Z5_fits = {}
 T5_fits = {}
-save = False
+save = True
 
 # For T5, the factor if -i has already been accounted for, so to plot the 
 # imaginary part, you actually need to plot things labeled as real and multiply
@@ -101,8 +101,8 @@ for i in ["Z5", "T5"]:
                                  - imag_fit)
             imag_fit_err = np.sqrt(imag_fit_err1**2 + imag_fit_err2**2)
             line1 = plt.errorbar(Pz,
-                        a**2*Z0*real_fit/prefactor[i],
-                        yerr=a**2*Z0*real_fit_err/prefactor[i], 
+                        a*Z0*real_fit/prefactor[i],
+                        yerr=a*Z0*real_fit_err/prefactor[i], 
                         fmt="bo", 
                         label=r"$\gamma_3\gamma_5$",
                         capsize=4)
@@ -132,8 +132,8 @@ for i in ["Z5", "T5"]:
             imag_fit_err = np.sqrt(imag_fit_err1**2 + imag_fit_err2**2)
             
             line2 = plt.errorbar(Pz,
-                        -a**2*Z0*imag_fit/prefactor[i],
-                        yerr=a**2*Z0*imag_fit_err/prefactor[i], 
+                        -a*Z0*imag_fit/prefactor[i],
+                        yerr=a*Z0*imag_fit_err/prefactor[i], 
                         fmt="rs", 
                         label=f"Pz = {Pz}",
                         capsize=4)

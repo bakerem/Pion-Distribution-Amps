@@ -30,7 +30,7 @@ for i in range(4,10):
     fits[f"Pz = {i}"] = fit_result
 
 # best values for E0 and E1 from the plateaus of earlier c2pt analysiss
-bestE1_tmins = [ 4,3,4,2,4,4] # with a window length of 10
+bestE1_tmins = [4,3,4,2,4,4] # with a window length of 10
 
 # functions for calculating extrapolated values. Again, for Z5, use things
 # as labelled, but for T5, use things labeled real for imaginary and vice versa
@@ -69,7 +69,7 @@ def imag_state2ratio(t,m0, m1):
 ##### Plot for Matrix elements over multiple z ######
 formats = {"4":"bs","5":"ro","6":"gH","7":"m*","8":"kD","9":"r^"}
 plt.figure()
-for Pz in [4,6,9]:
+for Pz in [4,5,6,9]:
     E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
     E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
     Z0 = np.sqrt(2*E0*E1_data[3,bestE1_tmins[Pz-4]-2])
@@ -100,14 +100,14 @@ for Pz in [4,6,9]:
                             - imag_fit)
     imag_fit_err = np.sqrt(imag_fit_err1**2 + imag_fit_err2**2)
     plt.errorbar(np.arange(0,13),
-                 Z0*real_fit[:13]/prefactor[init_char],
-                 yerr=np.sqrt(a)*Z0*real_fit_err[:13]/prefactor[init_char],
+                 a*Z0*real_fit[:13]/prefactor[init_char],
+                 yerr=a*Z0*real_fit_err[:13]/prefactor[init_char],
                  fmt=formats[f"{Pz}"],
                  label=f"Pz = {Pz}",
                  capsize=4)
     # plt.errorbar(np.arange(0,13),
-    #              Z0*imag_fit[:13]/prefactor[init_char],
-    #              yerr=Z0*imag_fit_err[:13]/prefactor[init_char],
+    #              a*Z0*imag_fit[:13]/prefactor[init_char],
+    #              yerr=a*Z0*imag_fit_err[:13]/prefactor[init_char],
     #              fmt=formats[f"{Pz}"],
     #              label=f"Pz = {Pz}",
     #              capsize=4)
