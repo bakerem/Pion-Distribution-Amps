@@ -36,7 +36,12 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
             os.makedirs(save_path, exist_ok=True)
 
     # read in data files
-    real_ratio_means, imag_ratio_means, real_ratio_stds, imag_ratio_stds = read_data(Ns, Nt, init_char, Pz, bz)
+    (real_ratio_means, 
+    imag_ratio_means, 
+    real_ratio_stds, 
+    imag_ratio_stds,
+    real_cov,
+    imag_cov) = read_data(Ns, Nt, init_char, Pz, bz)
     
     # load in data from previous fits 
     # E0_data is from 1 state fit and E1_data is from 2 state fit

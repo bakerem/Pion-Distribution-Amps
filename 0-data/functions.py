@@ -20,7 +20,8 @@ def read_data(Ns, Nt, init_char, Pz, bz):
     real_samples = np.zeros((Ns,Nt))
     imag_samples = np.zeros((Ns,Nt))
     ratio = DA_data/c2pt_data
-    ratio *= -1j
+    if init_char == "Z5":
+        ratio *= -1j
     real_ratio = np.real(ratio)
     imag_ratio = np.imag(ratio)
     
@@ -35,6 +36,7 @@ def read_data(Ns, Nt, init_char, Pz, bz):
 
     real_ratio_stds = np.sqrt(Ns-1)*np.std(real_samples, axis = 0)
     imag_ratio_stds = np.sqrt(Ns-1)*np.std(imag_samples, axis = 0)
+
 
     return real_ratio_means, imag_ratio_means, real_ratio_stds, imag_ratio_stds
 

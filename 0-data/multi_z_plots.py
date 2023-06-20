@@ -10,6 +10,7 @@ a = 2.359
 t_start = 4
 t_end = 14
 fits = {}
+real = True
 save = False
 
 # For T5, the factor if -i has already been accounted for, so to plot the
@@ -67,9 +68,9 @@ def imag_state2ratio(t,m0, m1):
 
 
 ##### Plot for Matrix elements over multiple z ######
-formats = {"4":"bs","5":"ro","6":"gH","7":"m*","8":"kD","9":"r^"}
+formats = {"4":"bs","5":"ro","6":"gH","7":"m*","8":"cD","9":"y^"}
 plt.figure()
-for Pz in [4,5,6,9]:
+for Pz in [4,5,6,7,8,9]:
     E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
     E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
     Z0 = np.sqrt(2*E0*E1_data[3,bestE1_tmins[Pz-4]-2])
@@ -99,22 +100,32 @@ for Pz in [4,5,6,9]:
                         fits[f"Pz = {Pz}"][8,:]) 
                             - imag_fit)
     imag_fit_err = np.sqrt(imag_fit_err1**2 + imag_fit_err2**2)
-    plt.errorbar(np.arange(0,13),
-                 a*Z0*real_fit[:13]/prefactor[init_char],
-                 yerr=a*Z0*real_fit_err[:13]/prefactor[init_char],
-                 fmt=formats[f"{Pz}"],
-                 label=f"Pz = {Pz}",
-                 capsize=4)
-    # plt.errorbar(np.arange(0,13),
-    #              a*Z0*imag_fit[:13]/prefactor[init_char],
-    #              yerr=a*Z0*imag_fit_err[:13]/prefactor[init_char],
-    #              fmt=formats[f"{Pz}"],
-    #              label=f"Pz = {Pz}",
-    #              capsize=4)
-plt.legend()
-plt.xlabel("$z/a$")
-plt.ylabel(r"Re $h^B(z,P_3)$")
-plt.title(f"Extrapolated Matrix Elements for Various Momenta; {init_char}")
-if save == True:
-    plt.savefig(f"{save_path}/real_extrapolated_R.png")
+    if real == True:
+        plt.errorbar(np.arange(0,13),
+                        a**2*Z0*real_fit[:13]/prefactor[init_char],
+                        yerr=a**2*Z0*real_fit_err[:13]/prefactor[init_char],
+                        fmt=formats[f"{Pz}"],
+                        label=f"Pz = {Pz}",
+                        capsize=4)
+    else:
+        plt.errorbar(np.arange(0,13),
+                        a*Z0*imag_fit[:13]/prefactor[init_char],
+                        yerr=a*Z0*imag_fit_err[:13]/prefactor[init_char],
+                        fmt=formats[f"{Pz}"],
+                        label=f"Pz = {Pz}",
+                        capsize=4)
+if real == True:
+    plt.legend()
+    plt.xlabel("$z/a$")
+    plt.ylabel(r"Re $h^B(z,P_3)$")
+    plt.title(f"Extrapolated Matrix Elements for Various Momenta; {init_char}")
+    if save == True:
+        plt.savefig(f"{save_path}/real_extrapolated_R.png")
+else:
+    plt.legend()
+    plt.xlabel("$z/a$")
+    plt.ylabel(r"Imag $h^B(z,P_3)$")
+    plt.title(f"Extrapolated Matrix Elements for Various Momenta; {init_char}")
+    if save == True:
+        plt.savefig(f"{save_path}/imag_extrapolated_R.png")
 plt.show()
