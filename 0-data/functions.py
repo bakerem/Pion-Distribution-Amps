@@ -2,7 +2,7 @@ import numpy as np
 import h5py
 import pandas as pd
 
-def read_data(Ns, Nt, init_char, Pz, bz):
+def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int) -> list:
     """
     Reads in the data from h5 file and pandas dataframe and calculates errors
     and means
@@ -40,8 +40,8 @@ def read_data(Ns, Nt, init_char, Pz, bz):
 
     return real_ratio_means, imag_ratio_means, real_ratio_stds, imag_ratio_stds
 
+    return np.imag(y)
 
-
-def phys_p(a, n):
-    # takes a as an energy in GeV
+def phys_p(a: float, n: int):
+    """takes a in GeV^-1 and returns physical momentum assosicated with n """
     return 2 * np.pi * n * a / 64
