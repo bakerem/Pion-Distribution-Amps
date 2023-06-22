@@ -1,3 +1,4 @@
+# Author Ethan Baker, ANL/Haverford College
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -18,6 +19,7 @@ plt.figure()
 format_dict = {"Z5": "bo", "T5": "rs"}
 for i in ["Z5", "T5"]:
     for Pz in range(4,10):
+        # load in data
         real_fit = np.load(f"{save_path}/{i}/Pz{Pz}/real_data.npy")
         real_fit_err = np.load(f"{save_path}/{i}/Pz{Pz}/real_errs.npy")
         imag_fit = np.load(f"{save_path}/{i}/Pz{Pz}/imag_data.npy")
@@ -40,6 +42,6 @@ plt.xlabel("$P_z$")
 plt.ylabel(r"$f_\pi/Z_A$ ")
 plt.title(r"Calculation of $f_{\pi}$")
 plt.legend([line1, line2], [r"$\gamma_3\gamma_5$", r"$\gamma_0\gamma_5$"])
-if save == True:
+if save:
     plt.savefig(f"{save_path}/real_f_pi.png")
 plt.show()

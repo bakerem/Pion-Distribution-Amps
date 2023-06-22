@@ -1,25 +1,22 @@
-import h5py
+# Author: Ethan Baker ANL/Haverford College
+
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
 from scipy.optimize import curve_fit
 import os
-from functions import read_data
+from functions import read_data, phys_p
 
 init_char = "T5" # can be "5", "T5", or "Z5"
 Nt = 128
 Ns = 10
 t_range = np.arange(0,128)
 
-a = 2.359
+a = 2.359 # lattice spacing in GeV^-1
+
 save = True
             #Nz= 4 5 6  7 8 9
-bestE0_tmins = [10,9,8,7,7,7] # with a window length of 15
-bestE1_tmins = [ 4,3,4, 2,4,4]              # with a window length of 10
-# set up directories for saving routines
-def phys_p(a, n):
-    # takes a as an energy in GeV
-    return 2 * np.pi * n * a / 64
+bestE1_tmins = [ 4,3,4, 2,4,4]    # with a window length of 10
+
 
 def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     """
@@ -29,7 +26,7 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     "imag_...". 
     """
          
-    if save == True:
+    if save:
             parent = "0-data/2_state_matrix_results"
             child = f"{init_char}/Pz{Pz}"
             save_path = os.path.join(parent,child)
@@ -39,12 +36,10 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     (real_ratio_means, 
     imag_ratio_means, 
     real_ratio_stds, 
-    imag_ratio_stds,
-    real_cov,
-    imag_cov) = read_data(Ns, Nt, init_char, Pz, bz)
+    imag_ratio_stds) = read_data(Ns, Nt, init_char, Pz, bz)
     
     # load in data from previous fits 
-    # E0_data is from 1 state fit and E1_data is from 2 state fit
+    # E0_data is from dispersion relation and E1_data is from 2 state fit
     E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
 
     E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
@@ -120,7 +115,7 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
 
 
     # plotting routine
-    if plot == True:
+    if plot:
         t_fit = np.arange(lower_lim,upper_lim,0.01)
         fig, axs = plt.subplots(2, 1, constrained_layout=True)
         fig.suptitle(f"R(t) at $N_z$=%.3f GeV and $z/a$={bz}" %phys_p(2.359,Pz))
@@ -157,8 +152,7 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
         axs[1].set_xlabel(r"$t/a$")
         axs[1].set_ylabel(r"Imag $(R(t))$")
         axs[1].set_ylim(-5e-6,35e-6)
-        # plt.show()
-        if save == True and bz%5==0:
+        if save and bz%5==0:
             plt.savefig(f"{save_path}/Pz{Pz}_m0fit_bz{bz}.png")
         plt.close()
     return np.array([real_chi2, real_popt[0], real_pcov[0,0], real_popt[1], real_pcov[1,1],
@@ -169,15 +163,14 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
 for Pz in range(4,10):
     fit_results = np.zeros((10,33))
     print(f"Starting step {Pz}")
-    if save == True:
+    if save:
             parent = "0-data/2_state_matrix_results"
             child = f"{init_char}/Pz{Pz}"
             save_path = os.path.join(parent,child)
             os.makedirs(save_path, exist_ok=True)
     for bz in range(0,33):
-        # results = perform_fit(bestE0_tmins[Pz-4],bestE0_tmins[Pz-4] + 10, bz, Pz, plot=True)
         results = perform_fit(4,14, bz, Pz, plot=True)
-        if save == True:
+        if save:
             fit_results[:,bz] = results
-    if save == True:
+    if save:
         np.save(f"{save_path}/Pz{Pz}_R.npy", fit_results)

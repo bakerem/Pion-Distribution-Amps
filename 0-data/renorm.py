@@ -1,3 +1,5 @@
+# Author: Ethan Baker ANL/Haverford College
+
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -6,12 +8,12 @@ from functions import phys_p
 Nt = 128
 Ns = 10
 a = 2.359
-bz_max = 13
+bz_max = 10
 P0 = 4
 init_char = "Z5"
 fits = {}
-save = True
-real = False
+save = False
+real = True
 
 
 # Create save path
@@ -33,7 +35,8 @@ for Pz in range(5,8):
     real_fit_err = np.load(f"{save_path}/{init_char}/Pz{Pz}/real_errs.npy")
     imag_fit = np.load(f"{save_path}/{init_char}/Pz{Pz}/imag_data.npy")
     imag_fit_err = np.load(f"{save_path}/{init_char}/Pz{Pz}/real_errs.npy")
-
+    # TODO Potential issue: uses physical p but lattice z in exponent. Is
+    # that ok?
     matrix_els = (((real_fit+1j*imag_fit)/(P0_reals + 1j*P0_imags))
                     *((P0_reals[0]+1j*P0_imags[0])/(real_fit[0] + 1j*imag_fit[0]))
                     *(np.exp(-1j*np.arange(0,33)*(phys_p(a,Pz)-phys_p(a,P0))/2))
@@ -55,15 +58,20 @@ for Pz in range(5,8):
                     *((P0_reals[0]+1j*(P0_imags[0]+P0_ierr[0]))/(real_fit[0] + 1j*imag_fit[0]))
                     *(np.exp(-1j*np.arange(0,33)*(phys_p(a,Pz)-phys_p(a,P0))/2))
                  ) - matrix_els
+    
     m_err = np.sqrt(m_err1**2 + m_err2**2 + m_err3**2 + m_err4**2)
-    if real == True:
+
+    if save:
+        np.save(f"0-data/renorm_results/Pz{Pz}_matrix_els.npy", matrix_els)
+        np.save(f"0-data/renorm_results/Pz{Pz}_matrix_errs.npy", m_err)
+    if real:
         plt.errorbar(np.arange(0,bz_max),
                     np.real(matrix_els[:bz_max]),
                     yerr = np.real(m_err[:bz_max]),
                     fmt=formats[str(Pz)],
                     capsize=3,
                     label=f"Pz = {Pz}")
-        plt.text(bz_max-0.8, np.real(matrix_els[bz_max-1]),f"Pz = {Pz}")
+        # plt.text(bz_max-0.8, np.real(matrix_els[bz_max-1]),f"Pz = {Pz}")
     else:
         plt.errorbar(np.arange(0,bz_max),
                     np.imag(matrix_els[:bz_max]),
@@ -71,17 +79,17 @@ for Pz in range(5,8):
                     fmt=formats[str(Pz)],
                     capsize=3,
                     label=f"Pz = {Pz}")
-        plt.text(bz_max-0.8, np.imag(matrix_els[bz_max-1]),f"Pz = {Pz}")
+        # plt.text(bz_max-0.8, np.imag(matrix_els[bz_max-1]),f"Pz = {Pz}")
 
-if real == True:
+if real:
     plt.legend()
     plt.xlabel(r"$z_3/a$")
     plt.ylabel(r"Re $\mathcal{M}$")
-    plt.xlim(-1,15)
+    plt.xlim(-1,13)
     plt.title("Renormalized Matrix Elements")
-    if save == True:
+    if save:
         os.makedirs("0-data/renorm_results", exist_ok=True)
-        plt.savefig("0-data/renorm_results/real_enorm_multi_p.png")
+        plt.savefig("0-data/renorm_results/real_renorm_multi_p.png")
     plt.show()
 
 else:
@@ -90,8 +98,11 @@ else:
     plt.ylabel(r"Imag $\mathcal{M}$")
     plt.xlim(-1,15)
     plt.title("Renormalized Matrix Elements")
-    if save == True:
+    if save:
         os.makedirs("0-data/renorm_results", exist_ok=True)
-        plt.savefig("0-data/renorm_results/imag_enorm_multi_p.png")
+        plt.savefig("0-data/renorm_results/imag_renorm_multi_p.png")
     plt.show()
+
+
+
 
