@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit, fsolve
-
+import os
 
 """
 Ethan Baker, Haverford College/ANL
@@ -14,25 +14,24 @@ for the fit.
 
 Nt = 128
 Pz = 0
-save = True
-p0 = (2e6, 1e7, 0.5)
+save = False
+Ns = 55
+p0 = (2e6, 1e7, 0.49)
 bounds = ([1e2,1e2,0], [1e12, 1e12, 5])
 
 lower_t = 2
-upper_t = 7
+upper_t = 18
 window = 10
 
-# create list of columns for df
-if Pz < 4:
-    Ns = 29
-else:
-    Ns = 30
+
+save_path = f"final_results/two_state_fits/Pz{Pz}"
+os.makedirs(save_path, exist_ok=True)
 
 # read in data as pandas dataframe
 columns = ["t"] + [str(i) for i in range(0, Ns)]
 if Pz < 4:
     df = pd.read_csv(
-        f"stats/c2pt-data/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",
+        f"0-data/c2pt_cfgs/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",
         names=columns,
         dtype=np.float64)
 else:
@@ -52,6 +51,16 @@ means = np.average(samples, axis=0)
 std_devs = np.sqrt(Ns - 1) * np.std(samples, axis=0)
 df["mean"] = means
 df["std dev"] = std_devs
+
+# calculation of covariance matrix 
+
+cov = np.zeros((Nt, Nt))
+for i in range(0,Nt):
+    for j in range(Nt):
+        cov[i,j] = np.average((df_data.iloc[i] - means[i])*
+                              (df_data.iloc[j] - means[j]))
+cov = cov/(Ns-1)
+
 
 # function to convert nz to physical Pz
 def phys_p(a, n):
@@ -85,7 +94,8 @@ def perform_fit(lower_lim, upper_lim, plot=False):
         obj_func,
         df["t"].iloc[lower_lim:upper_lim],
         df["mean"].iloc[lower_lim:upper_lim],
-        sigma=df["std dev"].iloc[lower_lim:upper_lim],
+        # sigma=df["std dev"].iloc[lower_lim:upper_lim],
+        sigma=cov[lower_lim:upper_lim,lower_lim:upper_lim],
         p0=p0,
         bounds=bounds,
         maxfev=2000,
@@ -99,14 +109,13 @@ def perform_fit(lower_lim, upper_lim, plot=False):
         / (upper_lim - lower_lim - len(popt))
     )
 
-    # data saving routine
 
 
     # append lists with data for plotting over multiple window sizes
 
 
     #######PLOTS#######
-    if plot == True:
+    if plot:
         # raw data plots w/ error bars
         plt.errorbar(
             df["t"].iloc[lower_lim:upper_lim],
@@ -138,17 +147,17 @@ def perform_fit(lower_lim, upper_lim, plot=False):
         plt.xlabel("$n_t$")
         plt.ylabel("$C(n_t)$")
         plt.title(f"Nz = {Pz}")
-        if save == True:
-            plt.savefig(f"stats/2state_fit_results/Pz{Pz}_corrfunc.png")
+        if save:
+            plt.savefig(f"{save_path}/Pz{Pz}_corrfunc.png")
         plt.show()
 
     return chi2, popt[2], np.sqrt(pcov[2, 2]), popt[0], np.sqrt(pcov[0,0]), popt[1], np.sqrt(pcov[1,1])
 
 
 
-fit_results = np.zeros((7,upper_t-lower_t))
-for i in range(lower_t, upper_t):
-    results = perform_fit(i,i+window, plot=False)
+fit_results = np.zeros((7,upper_t-lower_t-window))
+for i in range(lower_t, upper_t-window):
+    results = perform_fit(i,upper_t, plot=False)
     fit_results[0,i-lower_t] = results[1] # save E1
     fit_results[1,i-lower_t] = results[2] # save E1 err
     fit_results[2,i-lower_t] = results[3] # save A0
@@ -160,15 +169,15 @@ for i in range(lower_t, upper_t):
     print(i, results[0], 2.359*results[1], 2.359*results[2])
 
 plt.figure()
-plt.errorbar(np.arange(lower_t, upper_t), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
+plt.errorbar(np.arange(lower_t, upper_t-window), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
 plt.xlabel(r"$t_{min}/a$")
 plt.ylabel(r"$E_1(P_z)$ (Gev)")
 plt.ylim(0,4)
 plt.text(2,3.5, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
-plt.title(r"Fitted $E_1$ from [$t_{min}/a$, $t_{min}/a$ + " + f"{window}]")
-if save == True:
-    plt.savefig(f"stats/2state_fit_results/Pz{Pz}window_length{window}.png")
-    np.save(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy", fit_results)
+plt.title(r"Fitted $E_1$ from [$t_{min}/a$, " + f"{upper_t}]")
+if save:
+    plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.png")
+    np.save(f"{save_path}/E1_fits_Pz{Pz}.npy", fit_results)
 plt.show()
 
 

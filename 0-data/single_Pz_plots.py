@@ -1,5 +1,6 @@
 # Author: Ethan Baker ANL/Haverford College
 
+from matplotlib.lines import fillStyles
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -7,14 +8,14 @@ from functions import read_data, phys_p
  
 init_char = "T5"
 Nt = 128
-Ns = 10
+Ns = 55
 a = 2.359
 t_start = 4
-t_end = 11
+t_end = 14
 dt = 1
 save = False
 
-parent = "0-data/2_state_matrix_results"
+parent = "final_results/2_state_matrix_results"
 child = f"{init_char}"
 save_path = os.path.join(parent,child)
 
@@ -22,7 +23,7 @@ if save == True:
     os.makedirs(save_path, exist_ok=True)
 
 fits = {}
-for i in range(4,10):
+for i in range(0,4):
     fit = np.load(f"{save_path}/Pz{i}/Pz{i}_R.npy")
     fits[f"Pz = {i}"] = fit
 
@@ -64,13 +65,13 @@ def imag_state2ratio(t,init_char, m0, m1):
 
 ##### Plot for combined z over one Pz #####
 save = True
-Pz = 4
+Pz = 2
 plt.figure()
-for bz in [0,2,4, 6,8,]:
+for bz in [0,2,4,6]:
     t = np.arange(t_start,t_end)
     real_means, imag_means, real_stds, imag_stds = read_data(Ns, Nt, init_char, Pz, bz)
 
-    E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
+    E1_data = np.load(f"final_results/two_state_fits/Pz{Pz}/E1_fits_Pz{Pz}.npy")
     E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
     E1 = E1_data[0,bestE1_tmins[Pz-4]-2]
     Z0 = np.sqrt(2*E0*E1_data[2,bestE1_tmins[Pz-4]-2])
@@ -96,7 +97,7 @@ for bz in [0,2,4, 6,8,]:
     imag_fit_err = np.sqrt(imag_fit_err1**2 + imag_fit_err2**2)
     
 
-    plt.errorbar(t,real_means[t_start:t_end],yerr=real_stds[t_start:t_end], fmt="ro", capsize=3)
+    plt.errorbar(t,real_means[t_start:t_end],yerr=real_stds[t_start:t_end], fmt="ro", capsize=3, markerfacecolor='none')
     plt.text(4,real_fit[0]+ 0.05*real_fit[0], f"z={bz}")
     plt.plot(np.arange(t_start,t_end,dt), real_fit, "b" )
     plt.fill_between(np.arange(t_start,t_end,dt),real_fit+real_fit_err, real_fit-real_fit_err, alpha=0.2, color="blue")

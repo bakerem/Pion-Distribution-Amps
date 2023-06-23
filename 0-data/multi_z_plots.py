@@ -15,16 +15,16 @@ real = True
 save = False
 
 # create directory for saving files
-parent = "0-data/2_state_matrix_results"
+parent = "final_results/2_state_matrix_results"
 child = f"{init_char}"
 save_path = os.path.join(parent,child)
 os.makedirs(save_path, exist_ok=True)
 
 
 ##### Plot for Matrix elements over multiple z ######
-formats = {"4":"bs","5":"ro","6":"gH","7":"m*","8":"cD","9":"y^"}
+formats = {"0":"bs","1":"ro","2":"gH","3":"m*","4":"cD","9":"y^"}
 plt.figure()
-for Pz in [4,5,6,7,9]:
+for Pz in range(0,4):
     real_fit = np.load(f"{save_path}/Pz{Pz}/real_data.npy")
     real_fit_err = np.load(f"{save_path}/Pz{Pz}/real_errs.npy")
     imag_fit = np.load(f"{save_path}/Pz{Pz}/imag_data.npy")

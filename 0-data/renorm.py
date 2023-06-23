@@ -17,7 +17,7 @@ real = True
 
 
 # Create save path
-save_path = "0-data/2_state_matrix_results"
+save_path = "final_results/2_state_matrix_results"
 os.makedirs(save_path, exist_ok=True)
 
 
@@ -62,8 +62,8 @@ for Pz in range(5,8):
     m_err = np.sqrt(m_err1**2 + m_err2**2 + m_err3**2 + m_err4**2)
 
     if save:
-        np.save(f"0-data/renorm_results/Pz{Pz}_matrix_els.npy", matrix_els)
-        np.save(f"0-data/renorm_results/Pz{Pz}_matrix_errs.npy", m_err)
+        np.save(f"final_results/renorm_results/Pz{Pz}_matrix_els.npy", matrix_els)
+        np.save(f"final_results/renorm_results/Pz{Pz}_matrix_errs.npy", m_err)
     if real:
         plt.errorbar(np.arange(0,bz_max),
                     np.real(matrix_els[:bz_max]),
@@ -88,8 +88,8 @@ if real:
     plt.xlim(-1,13)
     plt.title("Renormalized Matrix Elements")
     if save:
-        os.makedirs("0-data/renorm_results", exist_ok=True)
-        plt.savefig("0-data/renorm_results/real_renorm_multi_p.png")
+        os.makedirs("final_results/renorm_results", exist_ok=True)
+        plt.savefig("final_results/renorm_results/real_renorm_multi_p.png")
     plt.show()
 
 else:
@@ -99,8 +99,8 @@ else:
     plt.xlim(-1,15)
     plt.title("Renormalized Matrix Elements")
     if save:
-        os.makedirs("0-data/renorm_results", exist_ok=True)
-        plt.savefig("0-data/renorm_results/imag_renorm_multi_p.png")
+        os.makedirs("final_results/renorm_results", exist_ok=True)
+        plt.savefig("final_results/renorm_results/imag_renorm_multi_p.png")
     plt.show()
 
 

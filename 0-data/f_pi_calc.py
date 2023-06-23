@@ -10,7 +10,7 @@ save = False
 
 
 # Create save path
-save_path = "0-data/2_state_matrix_results"
+save_path = "final_results/2_state_matrix_results"
 os.makedirs(save_path, exist_ok=True)
 
 
@@ -18,7 +18,7 @@ os.makedirs(save_path, exist_ok=True)
 plt.figure()
 format_dict = {"Z5": "bo", "T5": "rs"}
 for i in ["Z5", "T5"]:
-    for Pz in range(4,10):
+    for Pz in range(0,4):
         # load in data
         real_fit = np.load(f"{save_path}/{i}/Pz{Pz}/real_data.npy")
         real_fit_err = np.load(f"{save_path}/{i}/Pz{Pz}/real_errs.npy")

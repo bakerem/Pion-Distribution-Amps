@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from scipy.optimize import curve_fit
-from functions import m_ope, phys_p
+from functions import c_ope, phys_p
 
 Nt = 128
 a = 2.359
@@ -19,8 +19,8 @@ Pz = 6
 Pz_min = 5
 Pz_max = 9
 Pz_range = phys_p(a,np.arange(Pz_min,Pz_max))
-save = True
-plot = False
+save = False
+plot = True
 
 # initialize empty arrays for saving data
 moms2 = np.zeros((bz_max-bz_min,))
@@ -41,13 +41,13 @@ for bz in range(bz_min, bz_max):
     # load in data for each momentum value
     for Pz in range(5,10):
         matrix_els[Pz-5]  = np.real(np.load(f"{save_path}/Pz{Pz}_matrix_els.npy")[bz])
-        matrix_errs[Pz-5] = np.real(np.load(f"{save_path}/Pz{Pz}_matrix_errs.npy")[bz])
+        matrix_errs[Pz-5] = np.real(np.load(f"{save_path}/renorm_results/Pz{Pz}_matrix_errs.npy")[bz])
 
     # function for fitting calculates ratio and wraps around Mellin-OPE of 
     # the matrix elements
-    def ratio(Pz, mm2, mm4):
-        num   = m_ope(bz, mm2, mm4, N_max, mu, Pz)
-        denom = m_ope(bz, mm2, mm4, N_max, mu, phys_p(a,P0))
+    def ratio(Pz, gm2, gm4):
+        num   = c_ope(bz, gm2, gm4, N_max, mu, Pz)
+        denom = c_ope(bz, gm2, gm4, N_max, mu, phys_p(a,P0))
         ratio_result = num/denom
         return np.real(ratio_result)
 
@@ -67,9 +67,9 @@ for bz in range(bz_min, bz_max):
         / (Pz_max - Pz_min - len(popt)))
     
     # save data
-    moms2[bz-bz_min] = popt[0]
+    moms2[bz-bz_min]     = popt[0]
     moms2_err[bz-bz_min] = np.sqrt(pcov[0,0])
-    moms4[bz-bz_min] = popt[1]
+    moms4[bz-bz_min]     = popt[1]
     moms4_err[bz-bz_min] = np.sqrt(pcov[1,1])
 
 
@@ -99,10 +99,10 @@ for bz in range(bz_min, bz_max):
 
 # save arrays
 if save:
-    np.save("0-data/renorm_results/mellin_moms2.npy",moms2)
-    np.save("0-data/renorm_results/mellin_moms2_err.npy", moms2_err)
-    np.save("0-data/renorm_results/mellin_moms4.npy",moms4)
-    np.save("0-data/renorm_results/mellin_moms4_err.npy", moms4_err)
+    np.save("0-data/renorm_results/gegen_moms2.npy",moms2)
+    np.save("0-data/renorm_results/gegen_moms2_err.npy", moms2_err)
+    np.save("0-data/renorm_results/gegen_moms4.npy",moms4)
+    np.save("0-data/renorm_results/gegen_moms4_err.npy", moms4_err)
 
 
 

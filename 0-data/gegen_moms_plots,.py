@@ -21,8 +21,8 @@ Pz_max = 8
 save_path = "0-data/renorm_results"
 os.makedirs(save_path, exist_ok=True)
 
-moms2 = np.load(f"{save_path}/mellin_moms2.npy")
-errs = np.load(f"{save_path}/renorm_results/mellin_moms2_err.npy")
+moms2 = np.load(f"{save_path}/gegen_moms2.npy")
+errs = np.load(f"{save_path}/renorm_results/gegen_moms2_err.npy")
 
 plt.errorbar(
     np.arange(bz_min, bz_max),

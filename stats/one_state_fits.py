@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit, fsolve
+import os
 
 """
 Ethan Baker, Haverford College/ANL
@@ -12,26 +13,26 @@ fitting and bounds are bounds for the fit.
 
 Nt = 128
 Pz = 0
-save = False
-p0 = (7e8, 0.05)
+Ns = 55
+save = True
+p0 = (7e7, 0.3/2.359)
 bounds = ([1e6,0],[1e10,10])
 
 lower_t = 2
-upper_t = 40
-window = 15
+upper_t = 30
+window = 14
 # create list of columns for df
-if Pz < 4:
-    Ns = 29
-else:
-    Ns = 30
+save_path = f"final_results/one_state_fits/Pz{Pz}"
+os.makedirs(save_path, exist_ok=True)
+
 
 columns = ["t"] + [str(i) for i in range(0, Ns)]
 # read in data as pandas dataframe 
 
 if Pz < 4:
-    df = pd.read_csv(f"stats/c2pt-data/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",names=columns, dtype=np.float64)
+    df = pd.read_csv(f"0-data/c2pt_cfgs/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",names=columns, dtype=np.float64)
 else:
-    df = pd.read_csv(f"stats/c2pt-data/64IGSRC_W40_k6.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",names=columns, dtype=np.float64)
+    df = pd.read_csv(f"0-data/c2pt_cfgs/64IGSRC_W40_k6.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",names=columns, dtype=np.float64)
 
 
 df_data = df.drop(axis="columns", labels=["t"])
@@ -55,6 +56,13 @@ for i in range(0,Nt):
                               (df_data.iloc[j] - means[j]))
 cov = cov/(Ns-1)
 
+
+# function to convert nz to physical Pz
+def phys_p(a, n):
+    # takes a as an energy in GeV
+    return 2 * np.pi * n * a / 64
+
+
 # plt.figure()
 # plt.plot(df["t"], 
 #          np.abs(np.log(abs(df["mean"]/df["mean"].shift(-1,fill_value=df["mean"].iloc[0])))),
@@ -63,14 +71,8 @@ cov = cov/(Ns-1)
 # plt.title(title)
 # plt.xlabel(r"n_t")
 # plt.ylabel(r"ln$(C(n)/C(n+1))$")
-# plt.savefig(f"stats/fit_results/Pz{Pz}_logplot")
+# plt.savefig(f"{save_path}/Pz{Pz}_logplot.png")
 # plt.show()
-
-
-# function to convert nz to physical Pz
-def phys_p(a, n):
-    # takes a as an energy in GeV
-    return 2 * np.pi * n * a / 64
 
 
 # main function for fitting routine
@@ -85,7 +87,6 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
                     obj_func, df["t"].iloc[lower_lim:upper_lim], 
                     df["mean"].iloc[lower_lim:upper_lim], 
                     sigma = cov[lower_lim:upper_lim,lower_lim:upper_lim],
-                    # sigma=df["std dev"].iloc[lower_lim:upper_lim],
                     p0=p0, 
                     bounds=bounds,
                     maxfev=2000,
@@ -96,13 +97,6 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
             (df["mean"].iloc[lower_lim:upper_lim]-
             obj_func(df["t"].iloc[lower_lim:upper_lim],*popt))**2/
             (df["std dev"].iloc[lower_lim:upper_lim])**2) / (upper_lim - lower_lim - len(popt))
-
-
-    # #data saving routine
-    if save == True:
-        new_data = np.array((popt[1],pcov[1,1], popt[0], pcov[0,0], chi2))
-        # data = np.concatenate((prev_data, new_data))
-        np.save(f"stats/fit_results/E0data_1state_Pz{Pz}.npy", new_data)
 
 
     # solving equation for effective mass
@@ -164,7 +158,7 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         plt.ylabel("$C(n_t)$")
         plt.title(f"Nz = {Pz}")
         if save == True:
-            plt.savefig(f"stats/fit_results/Pz{Pz}_corrfunc.png")
+            plt.savefig(f"{save_path}/Pz{Pz}_corrfunc.pdf")
         plt.show()
 
 
@@ -172,49 +166,53 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         # effective mass plots
         plt.figure()
         plt.errorbar(df["t"].iloc[lower_lim:upper_lim],
-                    roots[lower_lim:upper_lim], 
-                    yerr= np.abs(roots_err[lower_lim:upper_lim]),
+                    2.359*roots[lower_lim:upper_lim], 
+                    yerr=2.359*np.abs(roots_err[lower_lim:upper_lim]),
                     capsize=3,
                     fmt="s")
 
-        plt.plot(df["t"].iloc[lower_lim:upper_lim], 
-                np.ones((upper_lim-lower_lim,))*obj_func_meff(df["t"].iloc[lower_lim:upper_lim], 
-                *popt_meff))
+        # plt.plot(df["t"].iloc[lower_lim:upper_lim], 
+        #         2.359*np.ones((upper_lim-lower_lim,))*obj_func_meff(df["t"].iloc[lower_lim:upper_lim], 
+        #         *popt_meff))
 
         plt.xlabel("$n_t$")
         plt.ylabel("$m_eff$")
-        plt.title(f"Nz = {Pz}")
-        tab_cols = ("Value", "Error")
-        tab_rows = ("$m_{eff}$", r"$\chi^2$")
-        cells = [["%.2e" %(2.359*popt_meff[0]), "%.2e" %(2.359*np.sqrt(pcov_meff[0,0]))]\
-                ,["%.3f" %chi2_meff, "n/a"]]
-        plt.table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="upper center", colWidths=[0.2,0.2])
+        plt.title(r"$m_{eff}$ " + f"at Nz = {Pz}")
+        # plt.ylim(0,3)
+        plt.fill_between([20,40],0.13,0.15, alpha=0.2)
+        # tab_cols = ("Value", "Error")
+        # tab_rows = ("$m_{eff}$", r"$\chi^2$")
+        # cells = [["%.2e" %(2.359*popt_meff[0]), "%.2e" %(2.359*np.sqrt(pcov_meff[0,0]))]\
+        #         ,["%.3f" %chi2_meff, "n/a"]]
+        # plt.table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="upper center", colWidths=[0.2,0.2])
         if save == True:
-            plt.savefig(f"stats/fit_results/Pz{Pz}_meff.png")
+            plt.savefig(f"{save_path}/Pz{Pz}_meff_filled.pdf")
         plt.show()
     return chi2, popt[1], np.sqrt(pcov[1,1]), popt[0], np.sqrt(pcov[0,0])
 
 
 # creates plot of E_0 fitted at each t_min ranging from lower_t to upper_t.
-fit_results = np.zeros((4,upper_t-lower_t))
-for i in range(lower_t, upper_t):
-    results = perform_fit(i,i+window, plot_raw=False)
+fit_results = np.zeros((5,upper_t-window-lower_t))
+perform_fit(2,50,plot_meff=True)
+for i in range(lower_t, upper_t-window):
+    results = perform_fit(i,upper_t, plot_raw=False)
     fit_results[0,i-lower_t] = results[1] # save E0
     fit_results[1,i-lower_t] = results[2] # save E0 err
     fit_results[2,i-lower_t] = results[3] # save A0
     fit_results[3,i-lower_t] = results[4] # save A0 err
+    fit_results[4,i-lower_t] = results[0] # save chi2
     print(i, results[0], 2.359*results[1], 2.359*results[2])
 
 plt.figure()
-plt.errorbar(np.arange(lower_t, upper_t), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
+plt.errorbar(np.arange(lower_t, upper_t-window), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
 plt.xlabel(r"$t_{min}/a$")
 plt.ylabel(r"$E_0(P_z)$ (Gev)")
 # plt.ylim(0,4)
 plt.text(7.5,0.28, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
-plt.title(r"Fitted $E_0$ from [$t_{min}/a$, $t_{min}/a$ + " + f"{window}]")
-if save == True:
-    plt.savefig(f"stats/fit_results/Pz{Pz}window_length{window}.png")
-    np.save(f"stats/fit_results/window_arrays/E0_fits_Pz{Pz}.npy", fit_results)
+plt.title(r"Fitted $E_0$ from [$t_{min}/a$, " + f"{upper_t}]")
+if save:
+    plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")
+    np.save(f"{save_path}/E0_fits_Pz{Pz}.npy", fit_results)
 plt.show()
 
 

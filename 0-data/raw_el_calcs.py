@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from functions import read_data, phys_p
+from functions import phys_p
 
 init_char = "Z5"
 Nt = 128
@@ -15,18 +15,18 @@ save = True
 
 # create directory for saving files
 if save == True:
-    parent = "0-data/2_state_matrix_results"
+    parent = "final_results/2_state_matrix_results"
     child = f"{init_char}"
     save_path = os.path.join(parent,child)
     os.makedirs(save_path, exist_ok=True)
 
 # load data into a dictionary with keys given by lattice momentum values
-for Pz in range(4,10):
-    fit = np.load(f"0-data/2_state_matrix_results/{init_char}/Pz{Pz}/Pz{Pz}_R.npy")
+for Pz in range(0,4):
+    fit = np.load(f"final_results/2_state_matrix_results/{init_char}/Pz{Pz}/Pz{Pz}_R.npy")
     fits[f"Pz = {Pz}"] = fit
 
 # best values for E0 and E1 from the plateaus of earlier c2pt analysiss
-bestE1_tmins = [4,3,4,2,4,4] # with a window length of 10
+bestE1_tmins = [3,3,3,3]    # with a window length of 10
 
 
 def real_state2ratio(t, m0, m1):
@@ -72,17 +72,18 @@ def imag_state2ratio(t, m0, m1):
 
 
 
-for Pz in range(4,10):
+for Pz in range(0,4):
     # load in data for calculations with function
-    E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
+    E1_data = np.load(f"final_results/two_state_fits/Pz{Pz}/E1_fits_Pz{Pz}.npy")
+
     E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
-    Z0 = np.sqrt(2*E0*E1_data[3,bestE1_tmins[Pz-4]-2])
-    E1 = E1_data[0,bestE1_tmins[Pz-4]-2]
-    Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz-4]-2])
+    E1 = E1_data[0,bestE1_tmins[Pz]-2]
+    Z0 = np.sqrt(2*E0*E1_data[2,bestE1_tmins[Pz]-2])
+    Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz]-2])
 
     # definition of prefactor used to convert from ratio to raw physical 
     # quantities
-    prefactor = {"Z5": a**2*Z0*phys_p(a,Pz), "T5": a**2*Z0/(a*E0) }
+    prefactor = {"Z5": a**2*Z0/phys_p(a,Pz), "T5": a**2*Z0/(a*E0) }
 
     # calculation of extrapolated value of ratio for the matrix element and
     # the errors propogated through errors in fitting parameters. 
@@ -97,7 +98,7 @@ for Pz in range(4,10):
                         fits[f"Pz = {Pz}"][3,:]+np.sqrt(fits[f"Pz = {Pz}"][4,:]))
                             - real_fit) 
     real_fit_err = np.sqrt(real_fit_err1**2 + real_fit_err2**2)
-
+    print(real_fit[0])
     imag_fit_err1 =np.abs(prefactor[init_char]*imag_state2ratio(100,
                         fits[f"Pz = {Pz}"][6,:], 
                         fits[f"Pz = {Pz}"][8,:]+np.sqrt(fits[f"Pz = {Pz}"][9,:]))

@@ -8,14 +8,14 @@ from functions import read_data, phys_p
 
 init_char = "T5" # can be "5", "T5", or "Z5"
 Nt = 128
-Ns = 10
+Ns = 55
 t_range = np.arange(0,128)
 
 a = 2.359 # lattice spacing in GeV^-1
 
 save = True
-            #Nz= 4 5 6  7 8 9
-bestE1_tmins = [ 4,3,4, 2,4,4]    # with a window length of 10
+            #Nz=0,1,2,3
+bestE1_tmins = [3,3,3,3]    # with a window length of 10
 
 
 def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
@@ -27,10 +27,10 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     """
          
     if save:
-            parent = "0-data/2_state_matrix_results"
-            child = f"{init_char}/Pz{Pz}"
-            save_path = os.path.join(parent,child)
-            os.makedirs(save_path, exist_ok=True)
+        parent = "final_results/2_state_matrix_results"
+        child = f"{init_char}/Pz{Pz}"
+        save_path = os.path.join(parent,child)
+        os.makedirs(save_path, exist_ok=True)
 
     # read in data files
     (real_ratio_means, 
@@ -40,12 +40,11 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     
     # load in data from previous fits 
     # E0_data is from dispersion relation and E1_data is from 2 state fit
-    E1_data = np.load(f"stats/2state_fit_results/window_arrays/E1_fits_Pz{Pz}.npy")
-
+    E1_data = np.load(f"final_results/two_state_fits/Pz{Pz}/E1_fits_Pz{Pz}.npy")
     E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
-    E1 = E1_data[0,bestE1_tmins[Pz-4]-2]
-    Z0 = np.sqrt(2*E0*E1_data[2,bestE1_tmins[Pz-4]-2])
-    Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz-4]-2])
+    E1 = E1_data[0,bestE1_tmins[Pz]-2]
+    Z0 = np.sqrt(2*E0*E1_data[2,bestE1_tmins[Pz]-2])
+    Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz]-2])
     
 
     """
@@ -151,7 +150,7 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
         axs[1].table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="lower center", colWidths=[0.2,0.2])
         axs[1].set_xlabel(r"$t/a$")
         axs[1].set_ylabel(r"Imag $(R(t))$")
-        axs[1].set_ylim(-5e-6,35e-6)
+        # axs[1].set_ylim(-5e-6,35e-6)
         if save and bz%5==0:
             plt.savefig(f"{save_path}/Pz{Pz}_m0fit_bz{bz}.png")
         plt.close()
@@ -160,17 +159,21 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
                     ])
 
 
-for Pz in range(4,10):
+for Pz in range(1,4):
     fit_results = np.zeros((10,33))
     print(f"Starting step {Pz}")
     if save:
-            parent = "0-data/2_state_matrix_results"
+            parent = "final_results/2_state_matrix_results"
             child = f"{init_char}/Pz{Pz}"
             save_path = os.path.join(parent,child)
             os.makedirs(save_path, exist_ok=True)
     for bz in range(0,33):
-        results = perform_fit(4,14, bz, Pz, plot=True)
+        results = perform_fit(3,18, bz, Pz, plot=True)
         if save:
             fit_results[:,bz] = results
     if save:
         np.save(f"{save_path}/Pz{Pz}_R.npy", fit_results)
+
+
+with open("0-data/raw_el_calcs.py") as f:
+    exec(f.read())

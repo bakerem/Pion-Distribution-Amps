@@ -3,6 +3,7 @@ import h5py
 import pandas as pd
 from math import factorial
 from scipy.special import gamma, jv
+import matplotlib.pyplot as plt
 
 
 alpha_s = 0.303
@@ -11,20 +12,26 @@ gamma_E = 0.57721
 a = 2.359
 
 
+
 def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int) -> list:
     """
     Reads in the data from h5 file and pandas dataframe and calculates errors
     and means
     """
+
     columns = ["t"] + [str(i) for i in range(0,Ns)]
-    file = h5py.File(f"0-data/qDA_cfgs/64I.qDA.ama.GSRC_W40_k6_flow05eps01.{init_char}.eta0.PX0PY0PZ{Pz}.h5")
-    DA_data = file[f"b_X/bT0/bz{bz}"]
+    if Pz < 4:
+        file = h5py.File(f"0-data/qDA_cfgs/64I.qDA.ama.GSRC_W40_k0_flow05eps01.{init_char}.eta0.PX0PY0PZ{Pz}.h5")
+        DA_data = file[f"b_X/bT0/bz{bz}"]
+    else:
+        file = h5py.File(f"0-data/qDA_cfgs/64I.qDA.ama.GSRC_W40_k6_flow05eps01.{init_char}.eta0.PX0PY0PZ{Pz}.h5")
+        DA_data = file[f"b_X/bT0/bz{bz}"]
 
     # read in 2pt correlation data
-    c2pt = pd.read_csv(f"0-data/c2pt_cfgs/64IGSRC_W40_k6.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv", names=columns)
+    c2pt = pd.read_csv(f"0-data/c2pt_cfgs/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv", names=columns)
     c2pt_data = np.array(c2pt.drop(axis="columns", labels=["t"])).transpose()
 
-        
+    
     # calculate means and error in ratio of DA/c2pt
     real_samples = np.zeros((Ns,Nt))
     imag_samples = np.zeros((Ns,Nt))
@@ -42,14 +49,14 @@ def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int) -> list:
 
     real_ratio_means = np.mean(real_samples, axis=0)
     imag_ratio_means = np.mean(imag_samples, axis=0)
-
+    
     real_ratio_stds = np.sqrt(Ns-1)*np.std(real_samples, axis = 0)
     imag_ratio_stds = np.sqrt(Ns-1)*np.std(imag_samples, axis = 0)
 
 
     return real_ratio_means, imag_ratio_means, real_ratio_stds, imag_ratio_stds
 
-    return np.imag(y)
+
 
 def phys_p(a: float, n: int):
     """takes a in GeV^-1 and returns physical momentum assosicated with n """
@@ -114,8 +121,11 @@ def c_ope(an, n, mu, bz):
     return h_tw2
 
 
-def c_n(n, mu, bz):
-    # TODO Figure out what delta is
+def c_n(n, mu, bz, init_char):
+    if init_char == "Z5":
+        delta = 1
+    else:
+        delta = 0
     Hn = sum(1/i for i in range(1,n+1))
     cn = 1 + (alpha_s*C_F/(2*np.pi))*(((5+2*n)/(3+n+n**2)) 
                                   + (2*delta)/(2+3*n+n**2)
