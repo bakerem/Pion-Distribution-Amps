@@ -14,7 +14,7 @@ fitting and bounds are bounds for the fit.
 Nt = 128
 Pz = 0
 Ns = 55
-save = True
+save = False
 p0 = (7e7, 0.3/2.359)
 bounds = ([1e6,0],[1e10,10])
 
