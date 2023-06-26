@@ -9,15 +9,13 @@ from functions import m_ope, phys_p
 Nt = 128
 a = 2.359
 mu = 2/a
-P0 = 4
-Pz = 6
+P0 = 1
 N_max = 4
 bz = 5
 bz_min = 2
 bz_max = 10
-Pz = 6
-Pz_min = 5
-Pz_max = 9
+Pz_min = 2
+Pz_max = 4
 Pz_range = phys_p(a,np.arange(Pz_min,Pz_max))
 save = True
 plot = False
@@ -29,8 +27,9 @@ moms4 = np.zeros((bz_max-bz_min,))
 moms4_err = np.zeros((bz_max-bz_min,))
 
 # create save path
-save_path = "0-data/renorm_results"
+save_path = "final_results/2_state_matrix_results_jack/Z5"
 os.makedirs(save_path, exist_ok=True)
+
 
 
 # iterate over range of z values
@@ -39,9 +38,10 @@ for bz in range(bz_min, bz_max):
     matrix_errs = np.zeros((5,))
 
     # load in data for each momentum value
-    for Pz in range(5,10):
-        matrix_els[Pz-5]  = np.real(np.load(f"{save_path}/Pz{Pz}_matrix_els.npy")[bz])
-        matrix_errs[Pz-5] = np.real(np.load(f"{save_path}/Pz{Pz}_matrix_errs.npy")[bz])
+    for Pz in range(2,4):
+        matrix_els[Pz]  = np.load(f"{save_path}/real_matrix_el.npy")[Pz,bz]
+        
+        matrix_errs[Pz] = np.load(f"{save_path}/real_matrix_el.npy")[Pz,bz]
 
     # function for fitting calculates ratio and wraps around Mellin-OPE of 
     # the matrix elements
@@ -54,17 +54,17 @@ for bz in range(bz_min, bz_max):
     # fit curve
     popt, pcov = curve_fit(ratio,
                         Pz_range,
-                        np.real(matrix_els[Pz_min-5:Pz_max-5]),
+                        matrix_els[Pz_min:Pz_max],
                         p0 = (0.3,0.1),
-                        sigma=np.real(matrix_errs[Pz_min-5:Pz_max-5]))
+                        sigma=matrix_errs[Pz_min:Pz_max])
 
     # calculate chi^2
     chi2 = np.sum(
-        (matrix_els[Pz_min-5:Pz_max-5]
+        (matrix_els[Pz_min:Pz_max]
             - ratio(Pz_range, *popt)
         ) ** 2
-        / (matrix_errs[Pz_min-5: Pz_max-5]) ** 2 
-        / (Pz_max - Pz_min - len(popt)))
+        / (matrix_errs[Pz_min: Pz_max]) ** 2 )
+        # / (Pz_max - Pz_min - len(popt)))
     
     # save data
     moms2[bz-bz_min] = popt[0]
@@ -77,8 +77,8 @@ for bz in range(bz_min, bz_max):
     if plot:
         plt.figure()
         plt.errorbar(Pz_range, 
-                    np.real(matrix_els[Pz_min-5:Pz_max-5]),
-                    yerr=np.real(matrix_errs[Pz_min-5:Pz_max-5]),
+                    np.real(matrix_els[Pz_min:Pz_max]),
+                    yerr=np.real(matrix_errs[Pz_min:Pz_max]),
                     fmt = "bs",
                     capsize=3,)
 
@@ -99,10 +99,10 @@ for bz in range(bz_min, bz_max):
 
 # save arrays
 if save:
-    np.save("0-data/renorm_results/mellin_moms2.npy",moms2)
-    np.save("0-data/renorm_results/mellin_moms2_err.npy", moms2_err)
-    np.save("0-data/renorm_results/mellin_moms4.npy",moms4)
-    np.save("0-data/renorm_results/mellin_moms4_err.npy", moms4_err)
+    np.save(f"{save_path}/moms/mellin_moms2.npy",moms2)
+    np.save(f"{save_path}/moms/mellin_moms2_err.npy", moms2_err)
+    np.save(f"{save_path}/moms/mellin_moms4.npy",moms4)
+    np.save(f"{save_path}/moms/mellin_moms4_err.npy", moms4_err)
 
 
 

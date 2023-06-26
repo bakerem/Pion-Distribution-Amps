@@ -33,8 +33,10 @@ def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int) -> list:
 
     
     # calculate means and error in ratio of DA/c2pt
-    real_samples = np.zeros((Ns,Nt))
-    imag_samples = np.zeros((Ns,Nt))
+    real_samples      = np.zeros((Ns,Nt))
+    imag_samples      = np.zeros((Ns,Nt))
+    real_sample_errs  = np.zeros((Ns,Nt))
+    imag_sample_errs = np.zeros((Ns,Nt))
     ratio = DA_data/c2pt_data
     if init_char == "Z5":
         ratio *= -1j
@@ -46,6 +48,8 @@ def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int) -> list:
         imag_sample = np.mean(np.delete(imag_ratio,i,axis=0), axis=0)
         real_samples[i,:] = real_sample
         imag_samples[i,:] = imag_sample
+        real_sample_errs[i,:] = np.std(np.delete(real_ratio,i,axis=0),axis=0)
+        imag_sample_errs[i,:] = np.std(np.delete(imag_ratio,i,axis=0), axis=0)
 
     real_ratio_means = np.mean(real_samples, axis=0)
     imag_ratio_means = np.mean(imag_samples, axis=0)
@@ -54,14 +58,21 @@ def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int) -> list:
     imag_ratio_stds = np.sqrt(Ns-1)*np.std(imag_samples, axis = 0)
 
 
-    return real_ratio_means, imag_ratio_means, real_ratio_stds, imag_ratio_stds
+    return (
+        real_ratio_means, 
+        imag_ratio_means, 
+        real_ratio_stds, 
+        imag_ratio_stds,
+        real_samples,
+        real_sample_errs,
+        imag_samples,
+        imag_sample_errs)
 
 
 
 def phys_p(a: float, n: int):
     """takes a in GeV^-1 and returns physical momentum assosicated with n """
     return 2 * np.pi * n * a / 64
-
 
 ### Definitions for Mellin OPE ###
 
@@ -105,7 +116,6 @@ def m_coeff(n,m,mu, bz):
 
     coeff = C0 + alpha_s*C_F/(2*np.pi)*C1
     return coeff
-
 
 ### Definitions for Conformal OPE ###
 def c_ope(an, n, mu, bz):

@@ -1,3 +1,4 @@
+from networkx import faster_could_be_isomorphic
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,9 +13,9 @@ fitting and bounds are bounds for the fit.
 """
 
 Nt = 128
-Pz = 0
+Pz = 3
 Ns = 55
-save = False
+save = True
 p0 = (7e7, 0.3/2.359)
 bounds = ([1e6,0],[1e10,10])
 
@@ -103,7 +104,14 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
     def solvingfunc(m,t,Nt,ratio_i):
         result = np.cosh(m*(t-0.5*Nt))/np.cosh(m*(t+1-0.5*Nt)) - ratio_i
         return result
+    
+    def f_prime(m,t,Nt,ratio_i):
+        result = ((1/np.cosh(m*(-0.5*Nt+t+1)))
+                  *((t-0.5*Nt)*np.sinh(m*(t-0.5*Nt))+0.5*(Nt-2*(t+1))*np.cosh(m*(t-0.5*Nt))
+                  *np.tanh(m*(-0.5*Nt+t+1)))
 
+        )
+        return result
     # intialize empty arrays
     roots = np.zeros((Nt,))
     roots_err = np.zeros((Nt,))
@@ -115,8 +123,9 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
     for i in range(0,Ns):
         for t in range(0,126): #solve for m_eff at each time step
             root = fsolve(solvingfunc, 
-                        x0=popt[1], 
-                        args=(t,Nt,samples[i,t]/samples[i,t+1]))
+                        #   fprime=f_prime,
+                          x0=popt[1], 
+                          args=(t,Nt,samples[i,t]/samples[i,t+1]))
             roots_all_samples[i,t] = root
     roots = np.average(roots_all_samples, axis=0)
     roots_err = np.sqrt(Ns-1)*np.std(roots_all_samples, axis=0)
@@ -178,8 +187,8 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         plt.xlabel("$n_t$")
         plt.ylabel("$m_eff$")
         plt.title(r"$m_{eff}$ " + f"at Nz = {Pz}")
-        # plt.ylim(0,3)
-        plt.fill_between([20,40],0.13,0.15, alpha=0.2)
+        plt.ylim(0,2)
+        # plt.fill_between([20,40],0.13,0.15, alpha=0.2)
         # tab_cols = ("Value", "Error")
         # tab_rows = ("$m_{eff}$", r"$\chi^2$")
         # cells = [["%.2e" %(2.359*popt_meff[0]), "%.2e" %(2.359*np.sqrt(pcov_meff[0,0]))]\
@@ -194,26 +203,27 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
 # creates plot of E_0 fitted at each t_min ranging from lower_t to upper_t.
 fit_results = np.zeros((5,upper_t-window-lower_t))
 perform_fit(2,50,plot_meff=True)
-for i in range(lower_t, upper_t-window):
-    results = perform_fit(i,upper_t, plot_raw=False)
-    fit_results[0,i-lower_t] = results[1] # save E0
-    fit_results[1,i-lower_t] = results[2] # save E0 err
-    fit_results[2,i-lower_t] = results[3] # save A0
-    fit_results[3,i-lower_t] = results[4] # save A0 err
-    fit_results[4,i-lower_t] = results[0] # save chi2
-    print(i, results[0], 2.359*results[1], 2.359*results[2])
+plt.ylim(0,2)
+# for i in range(lower_t, upper_t-window):
+#     results = perform_fit(i,upper_t, plot_raw=False)
+#     fit_results[0,i-lower_t] = results[1] # save E0
+#     fit_results[1,i-lower_t] = results[2] # save E0 err
+#     fit_results[2,i-lower_t] = results[3] # save A0
+#     fit_results[3,i-lower_t] = results[4] # save A0 err
+#     fit_results[4,i-lower_t] = results[0] # save chi2
+#     print(i, results[0], 2.359*results[1], 2.359*results[2])
 
-plt.figure()
-plt.errorbar(np.arange(lower_t, upper_t-window), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
-plt.xlabel(r"$t_{min}/a$")
-plt.ylabel(r"$E_0(P_z)$ (Gev)")
-# plt.ylim(0,4)
-plt.text(7.5,0.28, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
-plt.title(r"Fitted $E_0$ from [$t_{min}/a$, " + f"{upper_t}]")
-if save:
-    plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")
-    np.save(f"{save_path}/E0_fits_Pz{Pz}.npy", fit_results)
-plt.show()
+# plt.figure()
+# plt.errorbar(np.arange(lower_t, upper_t-window), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
+# plt.xlabel(r"$t_{min}/a$")
+# plt.ylabel(r"$E_0(P_z)$ (Gev)")
+# # plt.ylim(0,4)
+# plt.text(7.5,0.28, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
+# plt.title(r"Fitted $E_0$ from [$t_{min}/a$, " + f"{upper_t}]")
+# if save:
+#     plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")
+#     np.save(f"{save_path}/E0_fits_Pz{Pz}.npy", fit_results)
+# plt.show()
 
 
 

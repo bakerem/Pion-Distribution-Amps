@@ -6,7 +6,7 @@ from scipy.optimize import curve_fit
 import os
 from functions import read_data, phys_p
 
-init_char = "T5" # can be "5", "T5", or "Z5"
+init_char = "Z5" # can be "5", "T5", or "Z5"
 Nt = 128
 Ns = 55
 t_range = np.arange(0,128)
@@ -33,10 +33,14 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
         os.makedirs(save_path, exist_ok=True)
 
     # read in data files
-    (real_ratio_means, 
+    (real_ratio_means,
     imag_ratio_means, 
     real_ratio_stds, 
-    imag_ratio_stds) = read_data(Ns, Nt, init_char, Pz, bz)
+    imag_ratio_stds,
+    real_samples,
+    real_sample_errs,
+    imag_samples,
+    imag_sample_errs) = read_data(Ns, Nt, init_char, Pz, bz)
     
     # load in data from previous fits 
     # E0_data is from dispersion relation and E1_data is from 2 state fit
@@ -86,20 +90,20 @@ def perform_fit(lower_lim:int, upper_lim:int, bz:int, Pz:int, plot=False):
     
     # curve fitting and calculating chi squared
     real_popt, real_pcov = curve_fit(
-                            real_state2ratio, 
-                            t_range[lower_lim:upper_lim], 
-                            real_ratio_means[lower_lim:upper_lim], 
-                            sigma=real_ratio_stds[lower_lim:upper_lim],
-                            maxfev=2000,
-                            )
+                                        real_state2ratio, 
+                                        t_range[lower_lim:upper_lim], 
+                                        real_ratio_means[lower_lim:upper_lim], 
+                                        sigma=real_ratio_stds[lower_lim:upper_lim],
+                                        maxfev=2000,
+                                        )
 
     imag_popt, imag_pcov = curve_fit(
-                            imag_state2ratio, 
-                            t_range[lower_lim:upper_lim], 
-                            imag_ratio_means[lower_lim:upper_lim], 
-                            sigma=imag_ratio_stds[lower_lim:upper_lim],
-                            maxfev=2000,
-                            )
+                                        imag_state2ratio, 
+                                        t_range[lower_lim:upper_lim], 
+                                        imag_ratio_means[lower_lim:upper_lim], 
+                                        sigma=imag_ratio_stds[lower_lim:upper_lim],
+                                        maxfev=2000,
+                                        )
 
     real_chi2  = np.sum(
             (real_ratio_means[lower_lim:upper_lim]-
