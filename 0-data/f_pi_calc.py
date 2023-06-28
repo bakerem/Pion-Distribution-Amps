@@ -26,22 +26,23 @@ for i in ["Z5", "T5"]:
         imag_fit_err = np.load(f"{save_path}/{i}/imag_raw_ratios_err.npy")[Pz,:]
         if i == "Z5":
             line1 = plt.errorbar(Pz,
-                    imag_fit[0],
-                    yerr=imag_fit_err[0], 
+                    real_fit[0],
+                    yerr=real_fit_err[0], 
                     fmt=format_dict[i], 
                     capsize=4)
         else: 
             line2 = plt.errorbar(Pz,
-                    imag_fit[0],
-                    yerr=imag_fit_err[0], 
+                    real_fit[0],
+                    yerr=real_fit_err[0], 
                     fmt=format_dict[i], 
                     capsize=4)
 
 
 plt.xlabel("$P_z$")
-plt.ylabel(r"Imag $f_\pi/Z_A$ ")
+plt.ylabel(r"$f_\pi/Z_A$ ")
 plt.title(r"Calculation of $f_{\pi}$")
+plt.hlines(real_fit[1], 0,4,"gray", "--")
 plt.legend([line1, line2], [r"$\gamma_3\gamma_5$", r"$\gamma_0\gamma_5$"])
 if save:
-    plt.savefig(f"{save_path}/imag_f_pi.png")
+    plt.savefig(f"{save_path}/real_f_pi.png")
 plt.show()

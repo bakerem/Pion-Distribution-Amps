@@ -4,18 +4,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-init_char = "T5"
+init_char = "Z5"
 Nt = 128
 Ns = 10
 a = 2.359
 t_start = 4
 t_end = 14
 fits = {}
-real = False
+real = True
 save = True
 
 # create directory for saving files
-parent = "final_results/2_state_matrix_results_jack"
+parent = "final_results_eps10/2_state_matrix_results_jack"
 child = f"{init_char}"
 save_path = os.path.join(parent,child)
 os.makedirs(save_path, exist_ok=True)
