@@ -10,7 +10,7 @@ save = True
 
 
 # Create save path
-save_path = "final_results/2_state_matrix_results_jack"
+save_path = "final_results_eps10/2_state_matrix_results_jack"
 os.makedirs(save_path, exist_ok=True)
 
 

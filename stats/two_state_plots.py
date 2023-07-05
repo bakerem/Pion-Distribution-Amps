@@ -17,7 +17,7 @@ E0_errs = np.zeros((trials,))
 E1s = np.zeros((trials,))
 E1_errs = np.zeros((trials,))
 chi2s = np.zeros((trials,))
-best_E1_tmins = [0,2,1,0]
+best_E1_tmins = [0,1,1,0]
 
 Pz = 0
 chi2s_single_Pz = np.load(f"final_results/two_state_fits/Pz{Pz}/E1_fits_Pz{Pz}.npy")[6]

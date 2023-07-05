@@ -13,16 +13,18 @@ for the fit.
 """
 
 Nt = 128
-Pz = 2
+Pz = 3
 save = True
-Ns = 55
-p0 = (2e9, 1e8, 0.5)
+if Pz < 4:
+    Ns = 55
+else: 
+    Ns = 10
+p0 = (2e8, 1e8, 0.6)
 bounds = ([1e2,1e2,0], [1e12, 1e12, 5])
 
 lower_t = 2
 upper_t = 18
 window = 10
-
 
 save_path = f"final_results/two_state_fits/Pz{Pz}"
 os.makedirs(save_path, exist_ok=True)
@@ -36,7 +38,7 @@ if Pz < 4:
         dtype=np.float64)
 else:
     df = pd.read_csv(
-        f"stats/c2pt-data/64IGSRC_W40_k6.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",
+        f"0-data/c2pt_cfgs/64IGSRC_W40_k6.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv",
         names=columns,
         dtype=np.float64)
 
@@ -97,7 +99,7 @@ def perform_fit(lower_lim, upper_lim, plot=False, savebest=False):
         obj_func,
         df["t"].iloc[lower_lim:upper_lim],
         df["mean"].iloc[lower_lim:upper_lim],
-        sigma=cov,
+        sigma=df["std dev"].iloc[lower_lim:upper_lim],
         p0=p0,
         bounds=bounds,
         maxfev=2000,
@@ -106,7 +108,7 @@ def perform_fit(lower_lim, upper_lim, plot=False, savebest=False):
     popt_errs = np.zeros((Ns,3))
     pcov = np.zeros((3,3))
     for s in range(Ns):
-        data = df_data.drop(axis="columns", labels=[str(i)])
+        data = df_data.drop(axis="columns", labels=[str(s)])
         cov = np.zeros((upper_lim-lower_lim, upper_lim-lower_lim))
         for i in range(lower_lim,upper_lim):
             for j in range(lower_lim,upper_lim):
@@ -191,7 +193,7 @@ def perform_fit(lower_lim, upper_lim, plot=False, savebest=False):
 
 
 fit_results = np.zeros((7,upper_t-lower_t-window))
-perform_fit(3,18,savebest=True)
+perform_fit(2,18,savebest=True)
 # for i in range(lower_t, upper_t-window):
 #     results = perform_fit(i,upper_t, plot=False)
 #     fit_results[0,i-lower_t] = results[1] # save E1

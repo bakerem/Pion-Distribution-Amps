@@ -270,7 +270,7 @@ def m_coeff_T5(n,m, bz):
 
 
 ### Definitions for Conformal OPE ###
-def c_ope(bz, an2, an4, an6, an8, l, h0, h1, N_max, N_ht, Pz, init_char):
+def c_ope(bz, an2, an4, an6, an8, l, h0, h1, N_max, N_ht, Pz, alpha, init_char):
     """
     The conformal OPE for h_tw2. F_n are the conformal partial waves
     and a_n are the Gegenbauer moments. a_n will be the fitting parameters. Eq. 
@@ -280,7 +280,7 @@ def c_ope(bz, an2, an4, an6, an8, l, h0, h1, N_max, N_ht, Pz, init_char):
     ans = [1, 0, an2, 0, an4, 0, an6, 0, an8]
          # 0, 1,   2, 3,   4, 5
     for n in range(0,N_max+1,2):
-        h_tw2 += ans[n]*F_n(n, bz, Pz, init_char, alpha_s)
+        h_tw2 += ans[n]*F_n(n, bz, Pz, init_char, alpha)
 
     l_corr = l*(Pz*a)**2
     h_corr = 0

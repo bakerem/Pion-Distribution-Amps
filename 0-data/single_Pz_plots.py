@@ -15,17 +15,14 @@ t_end = 14
 dt = 1
 save = False
 
-parent = "final_results/2_state_matrix_results"
+parent = "final_results/2_state_matrix_results_jack"
 child = f"{init_char}"
 save_path = os.path.join(parent,child)
 
 if save == True:
     os.makedirs(save_path, exist_ok=True)
 
-fits = {}
-for i in range(0,4):
-    fit = np.load(f"{save_path}/Pz{i}/Pz{i}_R.npy")
-    fits[f"Pz = {i}"] = fit
+
 
 
          # Nz = 4,5,6,7,8,9

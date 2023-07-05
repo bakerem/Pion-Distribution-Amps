@@ -14,7 +14,7 @@ P0 = 1
 
 N_max = 2
 Nh = 0
-Nl = 1
+Nl = 0
 bz_min_low = 2
 bz_min_up  = 3
 
@@ -50,13 +50,13 @@ for smear in ["final_results", "final_results_eps10"]:
                 bzPz_range = np.array((np.repeat(bz_range,len(Pz_range)),np.tile(Pz_range,len(bz_range))))
                 matrix_els = matrix_els_full[Pz_min:Pz_max,bz_min:bz_max].flatten("F")
                 matrix_errs = matrix_errs_full[Pz_min:Pz_max, bz_min:bz_max].flatten("F")
-                # function for fitting calculates ratio and wraps around gegen-OPE of 
+                # function for fitting calculates ratio and wraps around tree-OPE of 
                 # the matrix elements
-                def ratio(bzPz, an2, an4, l):
+                def ratio(bzPz, an2, an4, ):
                     bz, Pz = bzPz_range
-                    alpha_s = 0.303
-                    num   = c_ope(bz/a, an2, an4, 0, 0, l, 0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, init_char)
-                    denom = c_ope(bz/a, an2, an4, 0, 0, l, 0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, init_char)
+                    alpha_tree = 0
+                    num   = c_ope(bz/a, an2, an4, 0, 0, 0, 0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_tree, init_char)
+                    denom = c_ope(bz/a, an2, an4, 0, 0, 0, 0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_tree, init_char)
                     ratio_result = num/denom
                     return np.real(ratio_result)
                 
@@ -107,13 +107,13 @@ for smear in ["final_results", "final_results_eps10"]:
                     plt.show()
 
                 if save:
-                    save_path = f"{smear}/2_state_matrix_results_jack/{init_char}/gegen_moms"
+                    save_path = f"{smear}/2_state_matrix_results_jack/{init_char}/tree_moms"
                     os.makedirs(save_path, exist_ok=True)
                     plt.savefig(f"{save_path}/_Nmax{N_max}.png")
-                    np.save(f"{save_path}/gegen_moms2_Nmax{N_max}_h{Nh}_l{Nl}.npy",moms2)
-                    np.save(f"{save_path}/gegen_moms2_err_Nmax{N_max}_h{Nh}_l{Nl}.npy", moms2_err)
-                    np.save(f"{save_path}/gegen_moms4_Nmax{N_max}_h{Nh}_l{Nl}.npy",moms4)
-                    np.save(f"{save_path}/gegen_moms4_err_Nmax{N_max}_h{Nh}_l{Nl}.npy", moms4_err)
+                    np.save(f"{save_path}/tree_moms2_Nmax{N_max}_h{Nh}_l{Nl}.npy",moms2)
+                    np.save(f"{save_path}/tree_moms2_err_Nmax{N_max}_h{Nh}_l{Nl}.npy", moms2_err)
+                    np.save(f"{save_path}/tree_moms4_Nmax{N_max}_h{Nh}_l{Nl}.npy",moms4)
+                    np.save(f"{save_path}/tree_moms4_err_Nmax{N_max}_h{Nh}_l{Nl}.npy", moms4_err)
                     
 
 
