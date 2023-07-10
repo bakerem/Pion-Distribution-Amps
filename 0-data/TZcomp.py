@@ -25,21 +25,21 @@ for smear_path in ["final_results", "final_results_eps10"]:
         smear = "05"
     else:
         smear = "10"
-
-    for init_char in ["Z5", "T5"]:
-        # create directory for saving files
-        parent = f"{smear_path}/2_state_matrix_results_jack"
-        child = f"{init_char}"
-        save_path = os.path.join(parent,child)
-        os.makedirs(save_path, exist_ok=True)
-
-
-        ##### Plot for Matrix elements over multiple z ######
-        formats = {"1":"s","2":"o","4":"H","6":"*","8":"D","5":"^"}
+    for Pz in [1,2,3,4,5,6,7,8,9]:
         fig = plt.figure()
         ax = fig.gca()
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        for Pz in [1,2,4,6,8]:
+        
+        for init_char in ["Z5", "T5"]:
+            # create directory for saving files
+            parent = f"{smear_path}/2_state_matrix_results_jack"
+            child = f"{init_char}"
+            save_path = os.path.join(parent,child)
+            os.makedirs(save_path, exist_ok=True)
+
+
+            ##### Plot for Matrix elements over multiple z ######
+            
             real_fit = np.load(f"{save_path}/real_raw_ratios.npy")
             real_fit_err = np.load(f"{save_path}/real_raw_ratios_err.npy")
             imag_fit = np.load(f"{save_path}/imag_raw_ratios.npy")
@@ -50,7 +50,7 @@ for smear_path in ["final_results", "final_results_eps10"]:
                 plt.errorbar(np.arange(0,13),
                                 real_fit[Pz,:13],
                                 yerr=real_fit_err[Pz,:13],
-                                fmt=formats[f"{Pz}"],
+                                fmt="s",
                                 label=f"Pz = {Pz}",
                                 markerfacecolor="none",
                                 capsize=4)
@@ -58,7 +58,7 @@ for smear_path in ["final_results", "final_results_eps10"]:
                 plt.errorbar(np.arange(0,13),
                                 imag_fit[Pz,:13],
                                 yerr=imag_fit_err[Pz,:13],
-                                fmt=formats[f"{Pz}"],
+                                fmt="s",
                                 label=f"Pz = {Pz}",
                                 markerfacecolor="none",
                                 capsize=4)

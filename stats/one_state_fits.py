@@ -4,6 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit, fsolve
 import os
+import scienceplots
+
+plt.style.use('science')
 
 """
 Ethan Baker, Haverford College/ANL
@@ -13,14 +16,14 @@ fitting and bounds are bounds for the fit.
 """
 
 Nt = 128
-Pz = 3
+Pz = 0
 Ns = 55
 save = True
-p0 = (7e7, 0.3/2.359)
+p0 = (1e8, 0.1)
 bounds = ([1e6,0],[1e10,10])
 
 lower_t = 2
-upper_t = 30
+upper_t = 40
 window = 14
 # create list of columns for df
 save_path = f"final_results/one_state_fits/Pz{Pz}"
@@ -55,6 +58,7 @@ for i in range(0,Nt):
     for j in range(Nt):
         cov[i,j] = np.average((df_data.iloc[i] - means[i])*
                               (df_data.iloc[j] - means[j]))
+
 cov = cov/(Ns-1)
 
 
@@ -178,17 +182,19 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
                     2.359*roots[lower_lim:upper_lim], 
                     yerr=2.359*np.abs(roots_err[lower_lim:upper_lim]),
                     capsize=3,
-                    fmt="s")
+                    fmt="bs",
+                    markerfacecolor="none"
+                    )
 
         # plt.plot(df["t"].iloc[lower_lim:upper_lim], 
         #         2.359*np.ones((upper_lim-lower_lim,))*obj_func_meff(df["t"].iloc[lower_lim:upper_lim], 
         #         *popt_meff))
 
-        plt.xlabel("$n_t$")
-        plt.ylabel("$m_eff$")
+        plt.xlabel("$t/a$")
+        plt.ylabel(r"$m_{eff}$ (GeV)")
         plt.title(r"$m_{eff}$ " + f"at Nz = {Pz}")
-        plt.ylim(0,2)
-        # plt.fill_between([20,40],0.13,0.15, alpha=0.2)
+        # plt.ylim(0,2)
+        plt.fill_between([20,40],0.13,0.15, alpha=0.2, color="blue",)
         # tab_cols = ("Value", "Error")
         # tab_rows = ("$m_{eff}$", r"$\chi^2$")
         # cells = [["%.2e" %(2.359*popt_meff[0]), "%.2e" %(2.359*np.sqrt(pcov_meff[0,0]))]\
@@ -203,27 +209,33 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
 # creates plot of E_0 fitted at each t_min ranging from lower_t to upper_t.
 fit_results = np.zeros((5,upper_t-window-lower_t))
 perform_fit(2,50,plot_meff=True)
-plt.ylim(0,2)
-# for i in range(lower_t, upper_t-window):
-#     results = perform_fit(i,upper_t, plot_raw=False)
-#     fit_results[0,i-lower_t] = results[1] # save E0
-#     fit_results[1,i-lower_t] = results[2] # save E0 err
-#     fit_results[2,i-lower_t] = results[3] # save A0
-#     fit_results[3,i-lower_t] = results[4] # save A0 err
-#     fit_results[4,i-lower_t] = results[0] # save chi2
-#     print(i, results[0], 2.359*results[1], 2.359*results[2])
+# plt.ylim(0,2)
+for i in range(lower_t, upper_t-window):
+    results = perform_fit(i,upper_t, plot_raw=False)
+    fit_results[0,i-lower_t] = results[1] # save E0
+    fit_results[1,i-lower_t] = results[2] # save E0 err
+    fit_results[2,i-lower_t] = results[3] # save A0
+    fit_results[3,i-lower_t] = results[4] # save A0 err
+    fit_results[4,i-lower_t] = results[0] # save chi2
+    print(i, results[0], 2.359*results[1], 2.359*results[2])
 
-# plt.figure()
-# plt.errorbar(np.arange(lower_t, upper_t-window), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
-# plt.xlabel(r"$t_{min}/a$")
-# plt.ylabel(r"$E_0(P_z)$ (Gev)")
-# # plt.ylim(0,4)
-# plt.text(7.5,0.28, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
+plt.figure()
+plt.errorbar(np.arange(lower_t, upper_t-window), 
+             2.359*np.array(fit_results[0]), 
+             yerr=(2.359*np.array(fit_results[1])), 
+             fmt="rs", 
+             capsize=4,
+             markerfacecolor='none',)
+plt.xlabel(r"$t_\text{min}/a$")
+plt.ylabel(r"$E_0(P_z)$ (Gev)")
+# plt.ylim(0,4)
+# plt.text(15,0.141, "Pz = %.2f GeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
 # plt.title(r"Fitted $E_0$ from [$t_{min}/a$, " + f"{upper_t}]")
-# if save:
-#     plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")
-#     np.save(f"{save_path}/E0_fits_Pz{Pz}.npy", fit_results)
-# plt.show()
+if save:
+    plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")
+    np.save(f"{save_path}/E0_fits_Pz{Pz}.npy", fit_results)
+plt.show()
+
 
 
 

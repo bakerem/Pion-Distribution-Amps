@@ -16,6 +16,7 @@ dt = 1
 save = False
 
 parent = "final_results/2_state_matrix_results_jack"
+smear = "05"
 child = f"{init_char}"
 save_path = os.path.join(parent,child)
 
@@ -66,7 +67,7 @@ Pz = 2
 plt.figure()
 for bz in [0,2,4,6]:
     t = np.arange(t_start,t_end)
-    real_means, imag_means, real_stds, imag_stds = read_data(Ns, Nt, init_char, Pz, bz)
+    real_means, imag_means, real_stds, imag_stds = read_data(Ns, Nt, init_char, Pz, bz, smear)
 
     E1_data = np.load(f"final_results/two_state_fits/Pz{Pz}/E1_fits_Pz{Pz}.npy")
     E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a

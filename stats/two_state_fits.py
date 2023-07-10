@@ -1,3 +1,4 @@
+from operator import truediv
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,13 +14,10 @@ for the fit.
 """
 
 Nt = 128
-Pz = 3
+Pz = 4
 save = True
-if Pz < 4:
-    Ns = 55
-else: 
-    Ns = 10
-p0 = (2e8, 1e8, 0.6)
+Ns = 55
+p0 = (2e7, 8e6, 1.)
 bounds = ([1e2,1e2,0], [1e12, 1e12, 5])
 
 lower_t = 2
@@ -214,7 +212,7 @@ perform_fit(2,18,savebest=True)
 # plt.text(2,3.5, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
 # plt.title(r"Fitted $E_1$ from [$t_{min}/a$, " + f"{upper_t}]")
 # if save:
-#     plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.png")
+#     plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")
 #     np.save(f"{save_path}/E1_fits_Pz{Pz}.npy", fit_results)
 # plt.show()
 

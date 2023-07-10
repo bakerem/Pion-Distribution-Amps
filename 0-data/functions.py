@@ -14,7 +14,7 @@ mu = 2
 
 
 
-def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int) -> list:
+def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int, smear:str) -> list:
     """
     Reads in the data from h5 file and pandas dataframe and calculates errors
     and means
@@ -22,17 +22,19 @@ def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int) -> list:
 
     columns = ["t"] + [str(i) for i in range(0,Ns)]
     if Pz < 4:
-        file = h5py.File(f"0-data/qDA_cfgs/64I.qDA.ama.GSRC_W40_k0_flow10eps01.{init_char}.eta0.PX0PY0PZ{Pz}.h5")
+        file = h5py.File(f"0-data/qDA_cfgs/64I.qDA.ama.GSRC_W40_k0_flow{smear}eps01.{init_char}.eta0.PX0PY0PZ{Pz}.h5")
         DA_data = file[f"b_X/bT0/bz{bz}"]
+ 
+        # read in 2pt correlation data
+        c2pt = pd.read_csv(f"0-data/c2pt_cfgs/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv", names=columns)
+        c2pt_data = np.array(c2pt.drop(axis="columns", labels=["t"])).transpose()
     else:
-        file = h5py.File(f"0-data/qDA_cfgs/64I.qDA.ama.GSRC_W40_k6_flow05eps01.{init_char}.eta0.PX0PY0PZ{Pz}.h5")
+        file = h5py.File(f"0-data/qDA_cfgs/64I.qDA.ama.GSRC_W40_k6_flow{smear}eps01.{init_char}.eta0.PX0PY0PZ{Pz}.h5")
         DA_data = file[f"b_X/bT0/bz{bz}"]
+        # read in 2pt correlation data
+        c2pt = pd.read_csv(f"0-data/c2pt_cfgs/64IGSRC_W40_k6.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv", names=columns)
+        c2pt_data = np.array(c2pt.drop(axis="columns", labels=["t"])).transpose()
 
-    # read in 2pt correlation data
-    c2pt = pd.read_csv(f"0-data/c2pt_cfgs/64IGSRC_W40_k0.ama.c2pt.PX0PY0PZ{Pz}.real.cfg.csv", names=columns)
-    c2pt_data = np.array(c2pt.drop(axis="columns", labels=["t"])).transpose()
-
-    
     # calculate means and error in ratio of DA/c2pt
     real_samples      = np.zeros((Ns,Nt))
     imag_samples      = np.zeros((Ns,Nt))
@@ -41,6 +43,7 @@ def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int) -> list:
     ratio = DA_data/c2pt_data
     if init_char == "Z5":
         ratio *= -1j
+   
     real_ratio = np.real(ratio)
     imag_ratio = np.imag(ratio)
     
@@ -192,7 +195,7 @@ def m_coeff_Z5(n,m, bz):
 
 def m_coeff_T5(n,m, bz):
     """
-    Mellin Coefficents for T5
+    Wilson Coefficents for T5
     """
     L = np.log((bz)**2*mu**2*np.exp(2*gamma_E)/4)
     # determination of C0
@@ -267,6 +270,86 @@ def m_coeff_T5(n,m, bz):
 
     coeff = C0 + alpha_s*C_F/(2*np.pi)*C1
     return coeff
+
+
+def x_dep1_m_ope(bz, alpha, l, h0, h1, N_max, N_ht, Pz, init_char):
+    
+    mm2 = 2**(-1-2*alpha)*np.sqrt(np.pi)*gamma(1+alpha)/gamma(2.5+alpha)
+    mm4 = 3*4**(-1-alpha)*np.sqrt(np.pi)*gamma(1+alpha)/gamma(3.5+alpha)
+    mm6 = 15*2**(-3-2*alpha)*np.sqrt(np.pi)*gamma(1+alpha)/gamma(4.5+alpha)
+    mm8 = 105*4**(-2-alpha)*np.sqrt(np.pi)*gamma(1+alpha)/gamma(5.5+alpha)
+
+    
+    
+    m_moms = [1, 0, mm2, 0, mm4,0, mm6, 0, mm8]
+    lam = bz*Pz
+    h_tw2 = 0
+
+    if init_char == "Z5":
+        for n in range(0,N_max+1):
+            term1 = (-1j*lam/2)**n/factorial(n)
+            term2 = 0
+            for m in range(0,n+1):
+                term2 += m_coeff_Z5(n,m, bz)*m_moms[m]
+            h_tw2 += term1*term2
+
+    elif init_char == "T5":
+        for n in range(0,N_max+1):
+            term1 = (-1j*lam/2)**n/factorial(n)
+            term2 = 0
+            for m in range(0,n+1):
+                term2 += m_coeff_T5(n,m, bz)*m_moms[m]
+            h_tw2 += term1*term2
+    
+    l_corr = l*(Pz*a)**2
+    h_corr = 0
+    hs = [h0,h1]
+    for i in range(0, N_ht):
+        h_corr += bz**2*hs[i]*F_n(i, bz, Pz,init_char, 0)
+
+    return h_tw2 + l_corr + h_corr
+
+def x_dep_many_m_ope(bz, s1, s2, l, h0, h1, N_max, N_ht, Pz, init_char, alpha, Ng):
+    if Ng == 1:
+        mm2 = (2**(-2-2*alpha)*np.sqrt(np.pi)*(5+2*s1 + 2*alpha*(1+3*s1+2*alpha*s1))*gamma(1+alpha))/(gamma(3.5 + alpha))
+        mm4 = 3*(2**(-3-2*alpha)*np.sqrt(np.pi)*(7+2*alpha + 4*(1+alpha)*(1+2*alpha)*s1)*gamma(alpha))/(gamma(4.5 + alpha))
+    elif Ng == 2:
+        mm2 = (2**(-2-2*alpha)*np.sqrt(np.pi)*(5+2*s1 + 2*alpha*(1+3*s1+2*alpha*s1))*gamma(1+alpha))/(gamma(3.5 + alpha))
+        mm4 = (2**(-4-2*alpha)*np.sqrt(np.pi)*(3*(9+2*alpha)*(7+2*alpha+4*(1+alpha)*(1+2*alpha)*s1)+
+                                               4*(1+alpha)*(2+alpha)*(1+2*alpha)*(3+2*alpha)*s2)*gamma(1+alpha))/(gamma(5.5+alpha))
+    elif Ng == 3:
+        mm2 = (2**(-2-2*alpha)*np.sqrt(np.pi)*(5+2*s1 + 2*alpha*(1+3*s1+2*alpha*s1))*gamma(1+alpha))/(gamma(3.5 + alpha))
+        mm4 = (2**(-4-2*alpha)*np.sqrt(np.pi)*(3*(9+2*alpha)*(7+2*alpha+4*(1+alpha)*(1+2*alpha)*s1)+
+                                               4*(1+alpha)*(2+alpha)*(1+2*alpha)*(3+2*alpha)*s2)*gamma(1+alpha))/(gamma(5.5+alpha))
+    m_moms = [1, 0, mm2, 0, mm4,]
+    print(mm2)
+    lam = bz*Pz
+    h_tw2 = 0
+
+    if init_char == "Z5":
+        for n in range(0,N_max+1):
+            term1 = (-1j*lam/2)**n/factorial(n)
+            term2 = 0
+            for m in range(0,n+1):
+                term2 += m_coeff_Z5(n,m, bz)*m_moms[m]
+            h_tw2 += term1*term2
+
+    elif init_char == "T5":
+        for n in range(0,N_max+1):
+            term1 = (-1j*lam/2)**n/factorial(n)
+            term2 = 0
+            for m in range(0,n+1):
+                term2 += m_coeff_T5(n,m, bz)*m_moms[m]
+            h_tw2 += term1*term2
+    
+    l_corr = l*(Pz*a)**2
+    h_corr = 0
+    hs = [h0,h1]
+    for i in range(0, N_ht):
+        h_corr += bz**2*hs[i]*F_n(i, bz, Pz,init_char, 0)
+
+    return h_tw2 + l_corr + h_corr
+
 
 
 ### Definitions for Conformal OPE ###
