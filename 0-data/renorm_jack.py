@@ -14,10 +14,10 @@ Nt = 128
 Ns = 55
 a = 2.359
 bz_max = 30
-P0 = 4
+P0 = 3
 fits = {}
-save = True
-real = True
+save = False
+real = False
 t_range = np.arange(0,128)
 lower_lim = 3
 upper_lim = 10
@@ -37,7 +37,7 @@ for smear_path in ["final_results", "final_results_eps10"]:
 
         ##### Plot for Matrix elements over multiple z ######
         plt.figure()
-        formats = {"1":"s","2":"o","3":"H","4":"*","5":"D","6":"^","7":"v", "8":">"}
+        formats = {"9":"s","2":"o","3":"H","4":"*","5":"D","6":"^","7":"v", "8":">"}
 
         # calculation of P0 stuff
         P0_real_fit_js = np.zeros((33,Ns))
@@ -128,7 +128,6 @@ for smear_path in ["final_results", "final_results_eps10"]:
 
 
         real_raw_ratios = np.load(f"{save_path}/real_raw_samples.npy")
-        print(real_raw_ratios.shape)
         imag_raw_ratios = np.load(f"{save_path}/imag_raw_samples.npy")
         real_matrix_el_js = np.zeros((10,33,Ns,))
         imag_matrix_el_js = np.zeros((10,33,Ns,))
@@ -162,7 +161,7 @@ for smear_path in ["final_results", "final_results_eps10"]:
 
 
 
-        for Pz in [5,6,7,8]:
+        for Pz in [5,6,7,8,9]:
             bz_max = 9
             if real:
                 plt.errorbar(phys_p(a,Pz)*np.arange(0,bz_max)/a,

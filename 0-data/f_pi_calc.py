@@ -9,7 +9,7 @@ plt.style.use('science')
 Nt = 128
 Ns = 10
 a = 2.359
-save = False
+save = True
 
 for smear in ["final_results", "final_results_eps10"]:
     # Create save path

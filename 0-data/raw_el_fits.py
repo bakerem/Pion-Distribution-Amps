@@ -13,7 +13,7 @@ save = True
 plot = True
 t_range = np.arange(0,128)
 lower_lim = 3
-upper_lim = 12
+upper_lim = 15
 
 for smear_path in ["final_results", "final_results_eps10"]:
     if smear_path == "final_results":

@@ -2,7 +2,7 @@ import numpy as np
 import h5py
 import pandas as pd
 from math import factorial
-from scipy.special import gamma, jv
+from scipy.special import gamma, jv, gegenbauer
 import matplotlib.pyplot as plt
 
 
@@ -77,7 +77,6 @@ def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int, smear:str) -> 
 def phys_p(a: float, n: int):
     """takes a in GeV^-1 and returns physical momentum assosicated with n """
     return 2 * np.pi * n * a / 64
-
 ### Definitions for Mellin OPE ###
 
 def m_ope(bz, mm2, mm4, mm6, mm8, l, h0, h1, N_max, N_ht, Pz, init_char):
@@ -274,11 +273,10 @@ def m_coeff_T5(n,m, bz):
 
 def x_dep1_m_ope(bz, alpha, l, h0, h1, N_max, N_ht, Pz, init_char):
     
-    mm2 = 2**(-1-2*alpha)*np.sqrt(np.pi)*gamma(1+alpha)/gamma(2.5+alpha)
-    mm4 = 3*4**(-1-alpha)*np.sqrt(np.pi)*gamma(1+alpha)/gamma(3.5+alpha)
-    mm6 = 15*2**(-3-2*alpha)*np.sqrt(np.pi)*gamma(1+alpha)/gamma(4.5+alpha)
-    mm8 = 105*4**(-2-alpha)*np.sqrt(np.pi)*gamma(1+alpha)/gamma(5.5+alpha)
-
+    mm2 = 1/(3+2*alpha)
+    mm4 = 3/(15+16*alpha+4*alpha**2)
+    mm6 = 15/(105 + 142*alpha + 60*alpha**2 + 8*alpha*3)
+    mm8 = 105/((3 + 2*alpha)*(5 + 2*alpha)*(7 + 2*alpha)*(9 + 2*alpha))
     
     
     m_moms = [1, 0, mm2, 0, mm4,0, mm6, 0, mm8]
@@ -309,23 +307,27 @@ def x_dep1_m_ope(bz, alpha, l, h0, h1, N_max, N_ht, Pz, init_char):
 
     return h_tw2 + l_corr + h_corr
 
-def x_dep_many_m_ope(bz, s1, s2, l, h0, h1, N_max, N_ht, Pz, init_char, alpha, Ng):
+def x_dep_many_m_ope(bz, alpha, s1, s2, s3, s4, s5, l, h0, h1, N_max, N_ht, Pz, init_char, Ng):
     if Ng == 1:
-        mm2 = (2**(-2-2*alpha)*np.sqrt(np.pi)*(5+2*s1 + 2*alpha*(1+3*s1+2*alpha*s1))*gamma(1+alpha))/(gamma(3.5 + alpha))
-        mm4 = 3*(2**(-3-2*alpha)*np.sqrt(np.pi)*(7+2*alpha + 4*(1+alpha)*(1+2*alpha)*s1)*gamma(alpha))/(gamma(4.5 + alpha))
-    elif Ng == 2:
-        mm2 = (2**(-2-2*alpha)*np.sqrt(np.pi)*(5+2*s1 + 2*alpha*(1+3*s1+2*alpha*s1))*gamma(1+alpha))/(gamma(3.5 + alpha))
-        mm4 = (2**(-4-2*alpha)*np.sqrt(np.pi)*(3*(9+2*alpha)*(7+2*alpha+4*(1+alpha)*(1+2*alpha)*s1)+
-                                               4*(1+alpha)*(2+alpha)*(1+2*alpha)*(3+2*alpha)*s2)*gamma(1+alpha))/(gamma(5.5+alpha))
+        mm2 = (5+2*alpha+2*s1+6*alpha*s1+4*alpha**2*s1)/(15+16*alpha+4*alpha**2)
+        mm4 = (3*(7+2*alpha+4*(1+alpha)*(1+2*alpha)*s1))/((3+2*alpha)*(5+2*alpha)*(7+2*alpha))
+    if Ng == 2:
+        mm2 = (5+2*alpha+2*s1+6*alpha*s1+4*alpha**2*s1)/(15+16*alpha+4*alpha**2)
+        mm4 = ((27+6*alpha)*(7+2*alpha+(4+4*alpha)*(1+2*alpha)*s1)+
+              4*(1+alpha)*(2+alpha)+(1+2*alpha)*(3+2*alpha)*s2*gamma(1.5+alpha))/(16*gamma(5.5+alpha))
     elif Ng == 3:
-        mm2 = (2**(-2-2*alpha)*np.sqrt(np.pi)*(5+2*s1 + 2*alpha*(1+3*s1+2*alpha*s1))*gamma(1+alpha))/(gamma(3.5 + alpha))
-        mm4 = (2**(-4-2*alpha)*np.sqrt(np.pi)*(3*(9+2*alpha)*(7+2*alpha+4*(1+alpha)*(1+2*alpha)*s1)+
-                                               4*(1+alpha)*(2+alpha)*(1+2*alpha)*(3+2*alpha)*s2)*gamma(1+alpha))/(gamma(5.5+alpha))
+        mm2 = (5+2*alpha+2*s1+6*alpha*s1+4*alpha**2*s1)/(15+16*alpha+4*alpha**2)
+        mm4 = (3*(9+2*alpha)*(7+2*alpha+4*(1+a)*(1+2*alpha)*s1) + 
+              4*(1+alpha)*(2+alpha)*(1+2*alpha)*(3+2*alpha)*s2)/((3+2*alpha)*(5+2*alpha)*(7+2*alpha)*(9+2*alpha))
+    
+    # gm6  = A*2**(3-2*alpha)*np.sqrt(np.pi)*gamma(4+alpha)/((7+2*alpha)*(9+2*alpha)*(11+2*alpha)*(13+2*alpha)*gamma(0.5+alpha))
+    # gm8  = 105*2**(-3-2*alpha)*(1+2*alpha)*np.sqrt(np.pi)*gamma(2+alpha)/gamma(6.5+alpha)
+    # gm10 = 4725*2**(-6-2*alpha)*(1+2*alpha)*np.sqrt(np.pi)*gamma(2+alpha)/gamma(7.5+alpha)
+    
+
     m_moms = [1, 0, mm2, 0, mm4,]
-    print(mm2)
     lam = bz*Pz
     h_tw2 = 0
-
     if init_char == "Z5":
         for n in range(0,N_max+1):
             term1 = (-1j*lam/2)**n/factorial(n)
@@ -404,3 +406,23 @@ def F_n(n, bz, Pz, init_char, alpha):
     )
     return Fn
 
+### Modified solver for z-dependence ###
+def chi2(sns:list, bzPz_range:np.array, delta:float, cov:np.array, ratio, matrix_els):
+    bz, Pz = bzPz_range
+    cov_inv = np.linalg.inv(cov)
+    chi2 = 0
+    for i, bzPz in enumerate(bzPz_range.transpose()):
+        bz, Pz = bzPz
+        for j, bzPz1 in enumerate(bzPz_range.transpose()):
+            bz1, Pz1 = bzPz1
+            chi2 += ((ratio(bz, Pz, *sns) - matrix_els[bz, Pz])*cov_inv[i,j]*(ratio(bz1, Pz1, *sns) - matrix_els[bz1, Pz1])
+                     + np.sum((sns/delta)**2))
+    return chi2
+
+def phi(u, alpha, s1, s2):
+    A = 2**(1+2*alpha)*gamma(1.5+alpha)/(np.sqrt(np.pi)*gamma(1+alpha))
+    y = u**alpha*(1-u)**alpha*(1+
+                                s1*gegenbauer(2,0.5+alpha)(1-2*u)+
+                                s2*gegenbauer(4,0.5+alpha)(1-2*u))
+    return A*y
+    

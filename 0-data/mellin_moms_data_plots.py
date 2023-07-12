@@ -3,13 +3,13 @@ import numpy as np
 import scienceplots
 import os
 
-from sklearn.datasets import make_friedman2
 from functions import phys_p, m_ope
 
 plt.style.use("science")
 
+
 a = 2.359
-P0 = 1
+P0 = 3
 save = True
 
 
@@ -20,10 +20,10 @@ for init_char in ["Z5", "T5"]:
     for smear in ["final_results", "final_results_eps10"]:
         save_path = f"{smear}/2_state_matrix_results_jack/{init_char}"
         os.makedirs(save_path, exist_ok=True)
-        formats = {"1":"s","2":"o","3":"H","4":"*","5":"D","6":"^","7":"v", "8":">"}
+        formats = {"1":"s","2":"o","3":"H","4":"*","5":"D","6":"^","7":"v", "8":">", "9":"s"}
         plt.figure()
         ax = plt.gca()
-        for Pz in [2,3,4,5,6,7,8]:
+        for Pz in [4,5,6,7,8,9]:
             bz_max = 9
             real_matrix_el = np.load(f"{save_path}/real_matrix_el.npy")
             real_matrix_err = np.load(f"{save_path}/real_matrix_err.npy")

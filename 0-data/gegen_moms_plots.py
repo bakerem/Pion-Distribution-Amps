@@ -8,7 +8,7 @@ import scienceplots
 Ns = 72
 
 plt.style.use('science')
-plt.rcParams['figure.figsize'] = [6.75, 9]
+# plt.rcParams['figure.figsize'] = [6.75, 9]
 
 save = True
 save_path = "final_results/2_state_matrix_results_jack"
@@ -78,7 +78,8 @@ plt.errorbar(
     xerr=(data2_Z5[:,1]),
     capsize=3,
     markerfacecolor="none",
-    fmt="bs",
+    fmt="s",
+    color=
 )
 plt.xlabel(r"$a_2$")
 for i in range(0,Ns):
