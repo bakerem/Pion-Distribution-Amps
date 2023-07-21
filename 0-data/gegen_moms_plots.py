@@ -78,9 +78,7 @@ plt.errorbar(
     xerr=(data2_Z5[:,1]),
     capsize=3,
     markerfacecolor="none",
-    fmt="s",
-    color=
-)
+    fmt="s",)
 plt.xlabel(r"$a_2$")
 for i in range(0,Ns):
     plt.text(0.23, i, infos[i])

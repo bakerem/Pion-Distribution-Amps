@@ -192,7 +192,7 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
 
         plt.xlabel("$t/a$")
         plt.ylabel(r"$m_{eff}$ (GeV)")
-        plt.title(r"$m_{eff}$ " + f"at Nz = {Pz}")
+        # plt.title(r"$m_{eff}$ " + f"at Nz = {Pz}")
         # plt.ylim(0,2)
         plt.fill_between([20,40],0.13,0.15, alpha=0.2, color="blue",)
         # tab_cols = ("Value", "Error")

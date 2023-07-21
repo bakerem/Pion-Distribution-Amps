@@ -48,7 +48,7 @@ for smear in ["final_results", "final_results_eps10"]:
 
     plt.xlabel("$P_z$")
     plt.ylabel(r"$f_\pi/Z_A$ ")
-    plt.title(r"Calculation of $f_{\pi}$")
+    # plt.title(r"Calculation of $f_{\pi}$")
     plt.axhline(lineloc,color="grey", linestyle="--")
     plt.legend([line1, line2], [r"$\gamma_3\gamma_5$", r"$\gamma_0\gamma_5$"])
     if save:

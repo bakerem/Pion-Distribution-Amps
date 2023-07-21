@@ -10,10 +10,10 @@ Nt = 128
 Ns = 55
 a = 2.359
 save = True
-plot = True
+plot = False
 t_range = np.arange(0,128)
-lower_lim = 3
-upper_lim = 15
+lower_lim = 2
+upper_lim = 7
 
 for smear_path in ["final_results", "final_results_eps10"]:
     if smear_path == "final_results":
@@ -21,10 +21,14 @@ for smear_path in ["final_results", "final_results_eps10"]:
     else:
         smear = "10"
 
-    for init_char in ["Z5", "T5"]:
+    for init_char in ["Z5","T5"]:
         # create arrays for storing jackknife blocks
         real_raw_ratios = np.zeros((10,33,Ns))
         imag_raw_ratios = np.zeros((10,33,Ns))
+        real_popts = np.zeros((10,33,2))
+        real_pcovs0 = np.zeros((10,33,))
+        real_pcovs1 = np.zeros((10,33,))
+
 
         # iterate through momenta and bz values and calculate jackknife samples at each one
         for Pz in range(0,10):
@@ -119,8 +123,12 @@ for smear_path in ["final_results", "final_results_eps10"]:
                     real_popt_js[s,:] = real_popt_j
                     imag_popt_js[s,:] = imag_popt_j
             # plotting routine
+                real_popts[Pz, bz] = np.average(real_popt_js,axis=0)
+                real_pcovs0[Pz, bz] = np.sqrt(Ns-1)*np.std(real_popt_js[:,0])
+                real_pcovs1[Pz, bz] = np.sqrt(Ns-1)*np.std(real_popt_js[:,1])
 
-                if plot and bz%5==0:
+                real_pcov1 = np.sqrt(Ns-1)*np.std(real_popt_js[:,1])
+                if plot and bz < 10:
                     real_popt = np.average(real_popt_js,axis=0)
                     imag_popt = np.average(imag_popt_js,axis=0)
                     real_pcov0 = np.sqrt(Ns-1)*np.std(real_popt_js[:,0])
@@ -163,7 +171,7 @@ for smear_path in ["final_results", "final_results_eps10"]:
                     axs[1].table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="lower center", colWidths=[0.2,0.2])
                     axs[1].set_xlabel(r"$t/a$")
                     axs[1].set_ylabel(r"Imag $(R(t))$")
-                    if save and bz%5==0:
+                    if save and bz< 10:
                         plt.savefig(f"{save_path}/Pz{Pz}_m0fit_bz{bz}.png")
                     # plt.show()
                     plt.close()
@@ -176,6 +184,11 @@ for smear_path in ["final_results", "final_results_eps10"]:
             np.save(f"{save_path}/imag_raw_ratios_err.npy", np.sqrt(Ns-1)*np.std(imag_raw_ratios, axis=2))
             np.save(f"{save_path}/real_raw_samples.npy", real_raw_ratios)
             np.save(f"{save_path}/imag_raw_samples.npy", imag_raw_ratios)
+            np.save(f"{save_path}/real_popt.npy", real_popts)
+            np.save(f"{save_path}/real_pcov0.npy", real_pcovs0)
+            np.save(f"{save_path}/real_pcov1.npy", real_pcovs1)
+
+
 
 
 
