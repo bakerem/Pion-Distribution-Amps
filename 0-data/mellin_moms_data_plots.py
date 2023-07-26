@@ -7,15 +7,15 @@ import os
 
 from functions import phys_p, m_ope, alpha_func
 
-# plt.style.use("science")
-font_dirs = ["/home/bakerem/.local/lib/python3.8/site-packages/matplotlib/mpl-data/fonts/ttf"]
-font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
-for font_file in font_files:
-    font_manager.fontManager.addfont(font_file)
+plt.style.use("science")
+# font_dirs = ["/home/bakerem/.local/lib/python3.8/site-packages/matplotlib/mpl-data/fonts/ttf"]
+# font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
+# for font_file in font_files:
+#     font_manager.fontManager.addfont(font_file)
 
-mpl.rcParams['font.sans-serif'] = 'Lato'
-print(mpl.rcParams['font.sans-serif'])
-plt.rcParams["font.size"] = 14
+# mpl.rcParams['font.sans-serif'] = 'Lato'
+# print(mpl.rcParams['font.sans-serif'])
+# plt.rcParams["font.size"] = 14
 
 
 a = 2.359
@@ -36,7 +36,7 @@ for init_char in ["T5"]:
         ax = plt.gca()
         for Pz in [2,4,6,8,9]:
             kappa=1
-            bz_max = 3
+            bz_max = 4
             real_matrix_el = np.load(f"{save_path}/real_matrix_el_P0{P0}.npy")
             real_matrix_err = np.load(f"{save_path}/real_matrix_err_P0{P0}.npy")
             mm2 = np.load(f"{save_path}/mellin_moms/mellin_moms2_Nmax2_h0_l0_P0{P0}_zmax{bz_max}_resum_k"+"%.2f"%kappa+".npy")[0]
@@ -53,8 +53,8 @@ for init_char in ["T5"]:
                 return np.real(ratio_result)
             color = next(ax._get_lines.prop_cycler)['color']
             bz_max += 1
-            plt.plot(phys_p(a,Pz)*np.arange(2,4, 0.001)/a,
-                    plot_ratio(np.arange(2,4, 0.001), Pz, mm2, mm4),color = color)
+            plt.plot(phys_p(a,Pz)*np.arange(2,6, 0.001)/a,
+                    plot_ratio(np.arange(2,6, 0.001), Pz, mm2, mm4),color = color)
             plt.errorbar(phys_p(a,Pz)*np.arange(2,bz_max)/a,
                         real_matrix_el[Pz,2:bz_max],
                         yerr = real_matrix_err[Pz,2:bz_max],
@@ -68,14 +68,16 @@ for init_char in ["T5"]:
         plt.legend()
         plt.xlabel(r"$\lambda=P_3z_3$")
         plt.ylabel(r"Re $\mathcal{M}$")
-        plt.xlim(0.35,3)
-        plt.ylim(0.6,1.02)
-        plt.title(f"Renormalized Matrix Elements, $\\kappa=${kappa}")
-        plt.text(0.6, 0.85, r"$P^0_3$ " + "= %.2f GeV" %phys_p(a,P0))
+        plt.xlim(0.35,4.5)
+        plt.ylim(0.4,1.02)
+        # plt.title(f"Renormalized Matrix Elements, $\\kappa=${kappa}")
+        plt.text(2, 0.95, r"$P^0_3$ " + "= %.2f GeV" %phys_p(a,P0))
+        plt.text(2.5, 0.9, f"$\\kappa=${kappa}")        
+
         # plt.text(4, 0.8, init_conv[init_char])
 
         if save:
-            plt.savefig(f"{save_path}/{init_char}real_renorm_multi_p_full_data_zoom_P0{P0}_k{kappa}_poster.pdf")
+            plt.savefig(f"{save_path}/{init_char}real_renorm_multi_p_full_data_zoom_P0{P0}_k{kappa}.pdf")
         plt.show()
 
 

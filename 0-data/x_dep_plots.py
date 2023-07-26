@@ -43,10 +43,11 @@ for delta in [5, 10, 20]:
                         s1s[index:index+12] = s1
                         s2s[index:index+12] = s2
                         # h0s[index:index+4] = h0
-                        index += 4
+                        index += 12
             mm2s = (5+2*alphas+2*s1s+6*alphas*s1s+4*alphas**2*s1s)/(15+16*alphas+4*alphas**2)
             mm4s = ((27+6*alphas)*(7+2*alphas+(4+4*alphas)*(1+2*alphas)*s1s)+
                 4*(1+alphas)*(2+alphas)+(1+2*alphas)*(3+2*alphas)*s2s*gamma(1.5+alphas))/(16*gamma(5.5+alphas))
+            
             
             phis = np.zeros((len(np.arange(0,1.01,0.001)), len(s1s)))
             for i, u in enumerate(np.arange(0,1.01,0.001)):
@@ -71,6 +72,13 @@ for delta in [5, 10, 20]:
             phi_samples     = np.zeros((len(np.arange(0,1.01,0.001)),Ns))
             phi_err_samples = np.zeros((len(np.arange(0,1.01,0.001)),Ns,))
 
+            mean2      = np.average(mm2s[80:160])
+            mean4      = np.average(mm4s[80:160])
+            mean_alpha = np.average(alphas[80:160])
+            mean_s1     = np.average(s1s[80:160])
+            mean_s2     = np.average(s2s[80:160])
+            meanh0     = np.average(h0s[80:160])
+            meanphi    = np.average(phis[:,80:160], axis=1)
             for i in range(len(s1s)):
                 alpha_samples[i] = np.average(np.delete(alphas, i))
                 s1_samples[i]    = np.average(np.delete(s1s, i))
@@ -81,14 +89,15 @@ for delta in [5, 10, 20]:
                 mm4_samples[i]    = np.average(np.delete(mm4s, i))
                 for j, u in enumerate(np.arange(0,1.01,0.001)):
                     phi_samples[j,i]     = np.average(np.delete(phis[j,:], i))
-                    phi_err_samples[j,i] = np.sqrt(np.average(np.delete(phis[j,:], i)**2) - (phi_samples[j,i])**2)
-                s1_err_samples[i]    = np.sqrt(np.average(np.delete(s1s, i)**2) - (s1_samples[i])**2)
-                s2_err_samples[i]    = np.sqrt(np.average(np.delete(s2s, i)**2) - (s2_samples[i])**2)
-                h0_err_samples[i]    = np.sqrt(np.average(np.delete(h0s, i)**2) - (h0_samples[i])**2)
+                    phi_err_samples[j,i] = np.sqrt(np.average(np.abs(np.delete(phis[j,:], i) - meanphi[j])**2))
+               
+                s1_err_samples[i]   = np.sqrt(np.average(np.abs(np.delete(s1s, i) - mean_s1)**2))
+                s2_err_samples[i]   = np.sqrt(np.average(np.abs(np.delete(s2s, i) - mean_s2)**2))
+                h0_err_samples[i]   = np.sqrt(np.average(np.abs(np.delete(h0s, i) - meanh0)**2))
 
-                mm2_err_samples[i]    = np.sqrt(np.average(np.delete(mm2s, i)**2) - (mm2_samples[i])**2)
-                mm4_err_samples[i]    = np.sqrt(np.average(np.delete(mm4s, i)**2) - (mm4_samples[i])**2)
-                alpha_err_samples[i] = np.sqrt(np.average(np.delete(alphas, i)**2) - (alpha_samples[i])**2)
+                mm2_err_samples[i]   = np.sqrt(np.average(np.abs(np.delete(mm2s, i) - mean2)**2))
+                mm4_err_samples[i]   = np.sqrt(np.average(np.abs(np.delete(mm4s, i) - mean4)**2))
+                alpha_err_samples[i] = np.sqrt(np.average(np.abs(np.delete(alphas, i) - mean_alpha)**2))
 
             alpha = np.average(alpha_samples)
             alpha_err = np.sqrt(len(alphas)-1)*np.std(alpha_samples)
@@ -98,18 +107,18 @@ for delta in [5, 10, 20]:
             s2 = np.average(s2_samples)
             s2_err = np.sqrt(len(s2s)-1)*np.std(s2_samples)
             # print(alpha, alpha_err, s1, s1_err, s2, s2_err,)
-            print( np.average(phi_samples[5,:]), np.average(phi_err_samples[5,:]))
+            print( np.std(mm2s), np.average(mm2_err_samples))
 
 
-            mm2 = np.average(mm2_samples)
+            mm2 = mean2
             mm2_err = np.sqrt(len(mm2s)-1)*np.std(mm2_samples)
             mm2_sys_err = np.average(mm2_err_samples)
 
-            mm4 = np.average(mm4_samples)
+            mm4 = mean4
             mm4_err = np.sqrt(len(mm4s)-1)*np.std(mm4_samples)
             mm4_sys_err = np.average(mm4_err_samples)
 
-            h0 = np.average(h0_samples)
+            h0 = meanh0
             h0_err = np.sqrt(len(h0s)-1)*np.std(h0_samples)
             h0_sys_err = np.average(h0_err_samples)
 
@@ -136,29 +145,31 @@ for delta in [5, 10, 20]:
             phi_err3 = phi(np.arange(0,1.01,0.001), alpha, s1 + s1_err, s2 + s2_err + np.average(s2_err_samples)) - phi(np.arange(0,1.01,0.001), alpha, s1, s2)
             phi_errt = np.sqrt(phi_err1**2 + phi_err2**2 + phi_err3**2)
             init_conv = {"Z5": r"$\gamma_3\gamma_5$", "T5": r"$\gamma_0\gamma_5$"}
+           
+            print(len(s1s))
             plt.figure()
-            plt.plot(np.arange(0,1.01,0.001),np.average(phi_samples, axis=1), label="Ansatz Fit")
+            plt.plot(np.arange(0,1.01,0.001),meanphi, label="Ansatz Fit")
             plt.fill_between(np.arange(0,1.01,0.001),
-                            np.average(phi_samples, axis=1) - np.sqrt(len(s1s)-1)*np.std(phi_samples, axis=1), 
-                            np.average(phi_samples, axis=1)  + np.sqrt(len(s1s)-1)*np.std(phi_samples, axis=1),
+                            meanphi - np.sqrt(len(s1s)-1)*np.std(phi_samples, axis=1), 
+                            meanphi + np.sqrt(len(s1s)-1)*np.std(phi_samples, axis=1),
                             color="#CD202C",
                             alpha=0.2)
             plt.fill_between(np.arange(0,1.01,0.001),
-                            np.average(phi_samples, axis=1) - np.average(phi_err_samples), 
-                            np.average(phi_samples, axis=1)  + np.average(phi_err_samples),
+                            meanphi  - np.average(phi_err_samples, axis=1),# np.average(phi_err_samples), 
+                            meanphi  + np.average(phi_err_samples, axis=1),#np.average(phi_err_samples),
                             color="#CD202C",
                             alpha=0.2)
             # plt.fill_between(np.arange(0,1.01,0.001),
-            #                 np.average(phi_samples, axis=1) - np.sqrt(len(s1s)-1)*np.std(phi_samples, axis=1) - np.average(phi_err_samples), 
+            #                 meanphi - np.sqrt(len(s1s)-1)*np.std(phi_samples, axis=1) - np.average(phi_err_samples), 
             #                 phi(np.arange(0,1.01,0.001), alpha,s1, s2) + np.sqrt(len(s1s)-1)*np.std(phi_samples, axis=1) + np.average(phi_err_samples),
             #                 color="#0082CA",
             #                 alpha=0.2)
             plt.xlim(0,1)
-            plt.title(f"$\\phi(u)$")
+            # plt.title(f"$\\phi(u)$")
             plt.axhline(1,color="black", linestyle="dashed", label="Flat DA")
             plt.xlabel(r"$u$")
-            plt.ylabel(r"$\phi(u,\mu)$")
-            plt.text(0.26,1.1,f"$\\delta=${delta/100}")
+            plt.ylabel(r"$\phi(u)$")
+            plt.text(0.26,0.8,f"$\\delta=${delta/100}")
             plt.axvspan(0,0.25, color="grey", alpha=0.35)
             plt.axvspan(0.75,1, color="grey", alpha=0.35)
             plt.legend()
@@ -168,7 +179,7 @@ for delta in [5, 10, 20]:
                 save_path = f"{smear}/2_state_matrix_results_jack/{init_char}/x_depend"
                 os.makedirs(save_path, exist_ok=True)
                 plt.savefig(f"{save_path}/{init_char}x_dep_Ng2_d{delta}_P0{P0}.pdf")
-            plt.show()
+            # plt.show()
             plt.close()
 
         # Author Ethan Baker, ANL/Haverford College

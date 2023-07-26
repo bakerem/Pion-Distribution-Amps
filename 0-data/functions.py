@@ -80,8 +80,8 @@ def phys_p(a: float, n: int):
     """takes a in GeV^-1 and returns physical momentum assosicated with n """
     return 2 * np.pi * n * a / 64
 
-def alpha_func(mu):
-    a_s = (303)/(1000+beta_0*303*np.log(0.25*mu**2))
+def alpha_func(as0, mu):
+    a_s = (as0)/(1+beta_0*as0*np.log(0.25*mu**2))
     return a_s
 ### Definitions for Mellin OPE ###
 def m_ope(bz, mm2, mm4, mm6, mm8, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu,  init_char):
@@ -93,11 +93,13 @@ def m_ope(bz, mm2, mm4, mm6, mm8, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu,  init
     m_moms = [1, 0, mm2, 0, mm4, 0, mm6, 0, mm8]
     ev2 = (mu/2)**(-25/(6*4*np.pi)*alpha_s*C_F)
     ev4 = (mu/2)**(-91/(15*4*np.pi)*alpha_s*C_F)
+    ev6 = (mu/2)**(-1027/(140*4*np.pi)*alpha_s*C_F)
+    ev8 = (mu/2)**(-1045/(126*4*np.pi)*alpha_s*C_F)
 
     # ev2 = (alpha_s/alpha_0)**(-25/(6*4*np.pi*beta_0)*C_F)
     # ev4 = (alpha_s/alpha_0)**(-91/(15*4*np.pi*beta_0)*C_F)
 
-    ev_facs = [1,0,ev2, 0, ev4]
+    ev_facs = [1,0,ev2, 0, ev4, 0, ev6, 0, ev8]
 
     lam = bz*Pz
     h_tw2 = 0
@@ -457,16 +459,14 @@ def chi2(params:list, bzPz_range:np.array, delta:float, cov_inv:np.array, ratio,
     # print(chi2)
     return chi2
 
-def chi2_orig(params:list, bzPz_range:np.array, cov:np.array, ratio, matrix_els):
+def chi2_orig(params:list, bzPz_range:np.array, cov_inv:np.array, ratio, matrix_els):
     bz, Pz = bzPz_range
-    cov_inv = np.linalg.inv(cov)
     chi2 = 0
     for i, bzPz in enumerate(bzPz_range.transpose()):
         bz, Pz = bzPz
         for j, bzPz1 in enumerate(bzPz_range.transpose()):
             bz1, Pz1 = bzPz1
-            sns = params[0:2]
-            chi2 += ((ratio(bz, Pz, *params) - matrix_els[bz, Pz])*cov_inv[i,j]*(ratio(bz1, Pz1, *params) - matrix_els[bz1, Pz1]))
+            chi2 += ((ratio(bz, Pz, *params) - matrix_els[Pz, bz])*cov_inv[i,j]*(ratio(bz1, Pz1, *params) - matrix_els[Pz1, bz1]))
     # print(chi2)
     return chi2
 

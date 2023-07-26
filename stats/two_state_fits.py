@@ -15,7 +15,7 @@ for the fit.
 
 Nt = 128
 Pz = 4
-save = True
+save = False
 Ns = 55
 p0 = (2e7, 8e6, 1.)
 bounds = ([1e2,1e2,0], [1e12, 1e12, 5])
@@ -191,29 +191,29 @@ def perform_fit(lower_lim, upper_lim, plot=False, savebest=False):
 
 
 fit_results = np.zeros((7,upper_t-lower_t-window))
-perform_fit(2,18,savebest=True)
-# for i in range(lower_t, upper_t-window):
-#     results = perform_fit(i,upper_t, plot=False)
-#     fit_results[0,i-lower_t] = results[1] # save E1
-#     fit_results[1,i-lower_t] = results[2] # save E1 err
-#     fit_results[2,i-lower_t] = results[3] # save A0
-#     fit_results[3,i-lower_t] = results[4] # save A0 err
-#     fit_results[4,i-lower_t] = results[5] # save A1
-#     fit_results[5,i-lower_t] = results[6] # save A1 err
-#     fit_results[6,i-lower_t] = results[0] # save chi2
+# perform_fit(2,18,savebest=True)
+for i in range(lower_t, upper_t-window):
+    results = perform_fit(i,upper_t, plot=False)
+    fit_results[0,i-lower_t] = results[1] # save E1
+    fit_results[1,i-lower_t] = results[2] # save E1 err
+    fit_results[2,i-lower_t] = results[3] # save A0
+    fit_results[3,i-lower_t] = results[4] # save A0 err
+    fit_results[4,i-lower_t] = results[5] # save A1
+    fit_results[5,i-lower_t] = results[6] # save A1 err
+    fit_results[6,i-lower_t] = results[0] # save chi2
 
-#     print(i, results[0], 2.359*results[1], 2.359*results[2])
+    print(i, results[0], 2.359*results[1], 2.359*results[2])
 
-# plt.figure()
-# plt.errorbar(np.arange(lower_t, upper_t-window), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
-# plt.xlabel(r"$t_{min}/a$")
-# plt.ylabel(r"$E_1(P_z)$ (Gev)")
-# plt.ylim(0,4)
-# plt.text(2,3.5, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
-# plt.title(r"Fitted $E_1$ from [$t_{min}/a$, " + f"{upper_t}]")
-# if save:
-#     plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")
-#     np.save(f"{save_path}/E1_fits_Pz{Pz}.npy", fit_results)
-# plt.show()
+plt.figure()
+plt.errorbar(np.arange(lower_t, upper_t-window), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
+plt.xlabel(r"$t_{min}/a$")
+plt.ylabel(r"$E_1(P_z)$ (Gev)")
+plt.ylim(0,4)
+plt.text(2,3.5, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
+plt.title(r"Fitted $E_1$ from [$t_{min}/a$, " + f"{upper_t}]")
+if save:
+    plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")
+    np.save(f"{save_path}/E1_fits_Pz{Pz}.npy", fit_results)
+plt.show()
 
 

@@ -9,16 +9,16 @@ import matplotlib.font_manager as font_manager
 from functions import alpha_func, m_ope, phys_p
 import scienceplots
 
-# plt.style.use("science")
+plt.style.use("science")
 
-font_dirs = ["/home/bakerem/.local/lib/python3.8/site-packages/matplotlib/mpl-data/fonts/ttf"]
-font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
-for font_file in font_files:
-    font_manager.fontManager.addfont(font_file)
+# font_dirs = ["/home/bakerem/.local/lib/python3.8/site-packages/matplotlib/mpl-data/fonts/ttf"]
+# font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
+# for font_file in font_files:
+#     font_manager.fontManager.addfont(font_file)
 
-mpl.rcParams['font.sans-serif'] = 'Lato'
-print(mpl.rcParams['font.sans-serif'])
-plt.rcParams["font.size"]= 14
+# mpl.rcParams['font.sans-serif'] = 'Lato'
+# print(mpl.rcParams['font.sans-serif'])
+# plt.rcParams["font.size"]= 14
 
 # colors:
 # blue: #0082CA
@@ -31,7 +31,7 @@ alpha_s = 0.303
 gamma_E = 0.57721
 
 save = True
-delta = 20
+delta = 5
 # initialize empty arrays for saving data
 for smear in [ "final_results", "final_results_eps10"]:
     for init_char in ["T5"]:
@@ -45,20 +45,19 @@ for smear in [ "final_results", "final_results_eps10"]:
                 mm2 = np.load(f"{save_path}/avg2_corr_P0{P0}.npy")
                 mm4 = np.load(f"{save_path}/avg4_corr_P0{P0}.npy")
                 # h0 = np.load(f"{save_path}/avgh0_corr_P0{P0}.npy")
-                
+
             else:
                 mm2 = np.load(f"{save_path}/ans_mm2_nocorr_d{delta}_P0{P0}.npy")
                 mm4 = np.load(f"{save_path}/ans_mm4_nocorr_d{delta}_P0{P0}.npy")
                 # h0  = np.load(f"{save_path}/ans_h0_nocorr_d{delta}_P0{P0}.npy")
                 print(mm2, mm4)
-                
             #load in data
 
             # function for fitting calculates ratio and wraps around Mellin-OPE of 
             # the matrix elements
             def ratio(bz, Pz, mm2, mm4,):
                 mu = 2*np.exp(-gamma_E)/(bz/a)
-                alpha_s = alpha_func(mu)
+                alpha_s = 0.303
                 num   = m_ope(bz/a, mm2, mm4, 0, 0, 0, 0, 0, 2*N_max, 1, phys_p(a,Pz), alpha_s, mu, init_char)
                 denom = m_ope(bz/a, mm2, mm4, 0, 0, 0, 0, 0, 2*N_max, 1, phys_p(a,P0), alpha_s, mu, init_char)
                 ratio_result = num/denom
@@ -88,12 +87,12 @@ for smear in [ "final_results", "final_results_eps10"]:
             r_errtm2 = np.sqrt(r_err1m2**2 + r_err2m2**2 )
 
             if fit:
-                color = "#0082CA"
-                # color = "blue"
+                # color = "#0082CA"
+                color = "blue"
                 label = "Moments Fit"
             else:
-                color = "#CD202C"
-                # color = "red"
+                # color = "#CD202C"
+                color = "red"
                 label = "Ansatz Fit"
             init_conv = {"Z5": r"$\gamma_3\gamma_5$", "T5": r"$\gamma_0\gamma_5$"}
             plt.plot(phys_p(a,Pz)*bz_range/a,ratio(bz_range, Pz, mm2[0], mm4[0], ),label=label, color=color )
@@ -108,13 +107,13 @@ for smear in [ "final_results", "final_results_eps10"]:
         plt.legend()
         plt.xlabel(r"$\lambda=P_3z_3$")
         plt.ylabel(r"Re $\mathcal{M}$")
-        plt.xlim(0,3)
-        plt.ylim(0.8,1)
+        plt.xlim(0,4.5)
+        plt.ylim(0.4,1)
         plt.text(0.1, 0.9, f"$\\delta=${delta/100}")
-        plt.title(f"Reconstructed Matrix Elements")
+        # plt.title(f"Reconstructed Matrix Elements")
         if save:
-            plt.savefig(f"{save_path}/{init_char}mm_fit_comp_P0{P0}_d{delta}_poster.pdf")
-        plt.show()
+            plt.savefig(f"{save_path}/{init_char}mm_fit_comp_P0{P0}_d{delta}.pdf")
+        # plt.show()
 
             
             

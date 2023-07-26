@@ -63,21 +63,22 @@ for smear in ["final_results_eps10"]:
                 return np.real(ratio_result)
                                     
             
-            def ratio_c(Pz_range, an2, an4, ):
+            def ratio_c(Pz_range, an2, an4,an6 ):
                 # fixed mu
-                mu = 2
+                mu = kappa*2*np.exp(gamma_E)/(bz/a)
+                # mu = 2
                 alpha_s = 0.303
-                num   = m_ope(bz/a, an2, an4, 0, 0, 0, 0, 0, 2*2, 1, phys_p(a,Pz_range), alpha_s, mu, init_char)
-                denom = m_ope(bz/a, an2, an4, 0, 0, 0, 0, 0, 2*2, 1, phys_p(a,P0), alpha_s, mu, init_char)
+                num   = m_ope(bz/a, an2, an4, an6, 0, 0, 0, 0, 2*3, 0, phys_p(a,Pz_range), alpha_s, mu, init_char)
+                denom = m_ope(bz/a, an2, an4, an6, 0, 0, 0, 0, 2*3, 0, phys_p(a,P0), alpha_s, mu, init_char)
                 ratio_result = num/denom
                 return np.real(ratio_result)
             
-            def ratio_t(Pz_range, an2, an4,h0):
+            def ratio_t(Pz_range, an2, an4,an6, an8,):
                 # resummed + HT
                 mu = kappa*2*np.exp(gamma_E)/(bz/a)
                 alpha_s = 0.303
-                num   = m_ope(bz/a, an2, an4, 0, 0, 0, h0, 0, 2*2, 1, phys_p(a,Pz_range), alpha_s, mu, init_char)
-                denom = m_ope(bz/a, an2, an4, 0, 0, 0, h0, 0, 2*2, 1, phys_p(a,P0), alpha_s, mu, init_char)
+                num   = m_ope(bz/a, an2, an4, an6, an8, 0, 0, 0, 2*4, 0, phys_p(a,Pz_range), alpha_s, mu, init_char)
+                denom = m_ope(bz/a, an2, an4, an6, an8, 0, 0, 0, 2*4, 0, phys_p(a,P0), alpha_s, mu, init_char)
                 ratio_result = num/denom
                 return np.real(ratio_result)
             
@@ -104,8 +105,8 @@ for smear in ["final_results_eps10"]:
             popt_t, pcov_t = curve_fit(ratio_t,
                                 Pz_range,
                                 matrix_els[Pz_range,bz],
-                                p0 =(0.33,0.2,0.1),
-                                bounds=[(0,0, -1,), (0.5, 0.3, 1)],
+                                # p0 =(0.33,0.2,0.1),
+                                # bounds=[(0,0, -1,), (0.5, 0.3, 1)],
                                 sigma=cov)
             # calculate chi^2
             # chi2 = (np.sum(
@@ -138,14 +139,14 @@ for smear in ["final_results_eps10"]:
                     label = "C-OPE",
                     capsize=3,)
 
-            # line3 = plt.errorbar(bz, 
-            #         popt_t[0],
-            #         yerr=np.sqrt(pcov_t[0,0]),
-            #         fmt = "gv",
-            #         color="#77B300",
-            #         markerfacecolor="none",
-            #         label = "Tree Expansion",
-            #         capsize=3,)
+            line3 = plt.errorbar(bz, 
+                    popt_t[1],
+                    yerr=np.sqrt(pcov_t[1,1]),
+                    fmt = "gv",
+                    # color="#77B300",
+                    markerfacecolor="none",
+                    label = "Tree Expansion",
+                    capsize=3,)
 
 
 
@@ -154,12 +155,12 @@ for smear in ["final_results_eps10"]:
         plt.ylabel(r"$\langle x^4 \rangle$")
         plt.ylim(0,0.3)
         # plt.text(6.05, 0.3, "M-OPE")
-        plt.legend([line2, line1, ], [r"Fixed $\mu$", r"Resummed",])
+        plt.legend([line1, line2, line3], [r"$N_\text{max}=4$", r"$N_\text{max}=6$", r"$N_\text{max}=8$",])
 
         if save:
             save_path = f"{smear}/2_state_matrix_results_jack/{init_char}"
             os.makedirs(save_path, exist_ok=True)
-            plt.savefig(f"{save_path}/fixed_z_mm4_resummed_kappa_"+"%.2f"%kappa+f"_P0{P0}.pdf")
+            plt.savefig(f"{save_path}/fixed_z_mm2_Nmax_resummed_kappa_"+"%.2f"%kappa+f"_P0{P0}.pdf")
         plt.show()
 
             

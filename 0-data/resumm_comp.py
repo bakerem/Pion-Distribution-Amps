@@ -9,7 +9,7 @@ import matplotlib.font_manager as font_manager
 from functions import phys_p
 from scipy.special import gamma
 
-Ns = 8
+Ns = 4
 a = 2.359
 P0 = 1
 # font_dirs = ["/home/bakerem/.local/lib/python3.8/site-packages/matplotlib/mpl-data/fonts/ttf"]
@@ -34,10 +34,10 @@ for smear in ["final_results", "final_results_eps10"]:
         data4 = np.zeros((Ns,2))
         data4resum = np.zeros((Ns,2))
         index = 0
-        for Nh in range(0,2):
+        for Nh in range(0,1):
             for Nl in range(0,1):
                 for N_max in range(2,3):
-                    for bz_max in range(5,6):
+                    for bz_max in range(7,8):
                         for Pz_min in range(0,4):
                             for Pz_max in range(0,1):
                                 info = f" {Nh} {Pz_min+2}"
