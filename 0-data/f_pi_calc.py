@@ -1,17 +1,24 @@
-# Author Ethan Baker, ANL/Haverford College
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 import scienceplots
 
 plt.style.use('science')
+
+"""
+Ethan Baker, ANL/Haverford College
+
+Produces plot that compares the bare matrix elements at z=0 for a range of 
+momentum and operators (T5, Z5). This result should be independent of momentum
+and the imaginary part should be 0. 
+"""
  
 Nt = 128
 Ns = 10
-a = 2.359
+
 save = True
 
-for smear in ["final_results", "final_results_eps10"]:
+for smear in ["final_results", "final_results_flow10"]:
     # Create save path
     save_path = f"{smear}/2_state_matrix_results_jack"
     os.makedirs(save_path, exist_ok=True)

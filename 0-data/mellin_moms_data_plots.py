@@ -1,34 +1,27 @@
 import matplotlib.pyplot as plt
-import matplotlib as mpl   
-import matplotlib.font_manager as font_manager
 import numpy as np
 import scienceplots
 import os
-
 from functions import phys_p, m_ope, alpha_func
 
+"""
+Ethan Baker, ANL/Haverford College
+
+Produces plots that overlay fit results with raw data. Uses results of Mellin
+moments from each momentum value with a specific z_max. 
+"""
+
 plt.style.use("science")
-# font_dirs = ["/home/bakerem/.local/lib/python3.8/site-packages/matplotlib/mpl-data/fonts/ttf"]
-# font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
-# for font_file in font_files:
-#     font_manager.fontManager.addfont(font_file)
-
-# mpl.rcParams['font.sans-serif'] = 'Lato'
-# print(mpl.rcParams['font.sans-serif'])
-# plt.rcParams["font.size"] = 14
 
 
-a = 2.359
-gamma_E = 0.57721
-P0 = 1
-save = True
-
-
-
+a = 1/2.359 # GeV^-1
+gamma_E = 0.57721 #Euler Constant
+P0 = 1  # Reference momentum
+save = False
 
 
 for init_char in ["T5"]:
-    for smear in ["final_results_eps10"]:
+    for smear in ["final_results_flow10"]:
         save_path = f"{smear}/2_state_matrix_results_jack/{init_char}"
         os.makedirs(save_path, exist_ok=True)
         formats = {"1":"s","2":"o","3":"H","4":"*","5":"D","6":"^","7":"v", "8":">", "9":"s"}
@@ -44,18 +37,18 @@ for init_char in ["T5"]:
             # h0  = np.load(f"{save_path}/mellin_moms/mellin_h0_Nmax2_h0_l0_P0{P0}_zmax{bz_max}_resum_k"+"%.2f"%kappa+".npy")[0]
             # print(mm2, mm4, h0)
             def plot_ratio(bz,Pz, mm2, mm4,):
-                mu = kappa*2*np.exp(-gamma_E)/(bz/a)
+                mu = kappa*2*np.exp(-gamma_E)/(bz*a)
                 # mu = 2
                 alpha_s = 0.303
-                num   = m_ope(bz/a, mm2, mm4, 0, 0, 0, 0, 0, 4, 1, phys_p(a,Pz), alpha_s, mu, init_char)
-                denom = m_ope(bz/a, mm2, mm4, 0, 0, 0, 0, 0, 4, 1, phys_p(a,P0), alpha_s, mu, init_char)
+                num   = m_ope(bz*a, mm2, mm4, 0, 0, 0, 0, 0, 4, 1, phys_p(a,Pz), alpha_s, mu, init_char)
+                denom = m_ope(bz*a, mm2, mm4, 0, 0, 0, 0, 0, 4, 1, phys_p(a,P0), alpha_s, mu, init_char)
                 ratio_result = num/denom
                 return np.real(ratio_result)
             color = next(ax._get_lines.prop_cycler)['color']
             bz_max += 1
-            plt.plot(phys_p(a,Pz)*np.arange(2,6, 0.001)/a,
-                    plot_ratio(np.arange(2,6, 0.001), Pz, mm2, mm4),color = color)
-            plt.errorbar(phys_p(a,Pz)*np.arange(2,bz_max)/a,
+            plt.plot(phys_p(a,Pz)*np.arange(2,bz_max, 0.001)*a,
+                    plot_ratio(np.arange(2,bz_max, 0.001), Pz, mm2, mm4),color = color)
+            plt.errorbar(phys_p(a,Pz)*np.arange(2,bz_max)*a,
                         real_matrix_el[Pz,2:bz_max],
                         yerr = real_matrix_err[Pz,2:bz_max],
                         fmt=formats[str(Pz)],

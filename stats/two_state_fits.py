@@ -10,14 +10,30 @@ Ethan Baker, Haverford College/ANL
 Uses a two-state three parameter fit for fitting C2pt data. E0 is fixed
 from the dispersion relation. Pz gives the momentum of the data in 
 simulation units, p0 is an initial guess for fitting and bounds are bounds
-for the fit. 
+for the fit. p0 especially may need modification for different momenta
+How to use:
+1) Run loop at the bottom of the plot to determine fit for range of t_mins
+   for one momentum
+2) Once best t_min has been determined, run perform_fit function with kwarg 
+   savebest=True. Note the best t_min used as this is used when producing a plot
+   in two_state_plots.py. To speed this up, comment out the loop that ranges
+   over t_min.
+3) Repeat for different momenta.
+
+The results of this fit are used in "two_state_plots.py" in this directory
+to produce a plot of the dispersion relation. That relies on a list called 
+bestE1s, which is put together manually by finding the t_min value that
+produces the fit with the lowest chi-squared during the fit. These are printed
+when the script is run to allow for easy computation. 
 """
 
 Nt = 128
+a = 1/2.359 # GeV^-1
 Pz = 4
+
 save = False
 Ns = 55
-p0 = (2e7, 8e6, 1.)
+p0 = (2e7, 8e6, 1.) # initial gueses for A0, A1, E1
 bounds = ([1e2,1e2,0], [1e12, 1e12, 5])
 
 lower_t = 2
@@ -58,7 +74,8 @@ df["std dev"] = std_devs
 # function to convert nz to physical Pz
 def phys_p(a, n):
     # takes a as an energy in GeV
-    return 2 * np.pi * n * a / 64
+    # 64 is the spatial lattice length and may need modification
+    return 2 * np.pi * n / (a * 64)
 
 
 
@@ -69,8 +86,8 @@ def perform_fit(lower_lim, upper_lim, plot=False, savebest=False):
     kwarg plot defines whether or not to produce plots. 
     """
 
-    # dispersion relation to fix E0
-    E0s = np.sqrt(0.13957**2 + phys_p(2.359, np.arange(0, 10)) ** 2) / 2.359
+    # dispersion relation to fix E0, in lattice units
+    E0s = np.sqrt(0.13957**2 + phys_p(a, np.arange(0, 10)) ** 2) * a
 
     # objective function for fitting
     def obj_func(t, A0, A1, E1):
@@ -83,25 +100,6 @@ def perform_fit(lower_lim, upper_lim, plot=False, savebest=False):
         return y
 
     # curve fitting and calculating chi squared
-
-    # calculation of covariance matrix 
-
-    cov = np.zeros((upper_lim-lower_lim, upper_lim-lower_lim))
-    for i in range(lower_lim,upper_lim):
-        for j in range(lower_lim,upper_lim):
-            cov[i-lower_lim,j-lower_lim] = np.average((df_data.iloc[i-lower_lim] - means[i-lower_lim])*
-                                (df_data.iloc[j-lower_lim] - means[j-lower_lim]))
-    cov = cov/(Ns-1)
-
-    popt_full, pcov_full = curve_fit(
-        obj_func,
-        df["t"].iloc[lower_lim:upper_lim],
-        df["mean"].iloc[lower_lim:upper_lim],
-        sigma=df["std dev"].iloc[lower_lim:upper_lim],
-        p0=p0,
-        bounds=bounds,
-        maxfev=2000,
-    )
     popt_js = np.zeros((Ns,3))
     popt_errs = np.zeros((Ns,3))
     pcov = np.zeros((3,3))
@@ -164,7 +162,7 @@ def perform_fit(lower_lim, upper_lim, plot=False, savebest=False):
         cells = [
             ["%.2e" %popt[0], "%.2e" % np.sqrt(pcov[0, 0])],
             ["%.2e" % popt[1], "%.2e" % np.sqrt(pcov[1, 1])],
-            ["%.2e" %(2.359*popt[2]), "%.2e" %(2.359*np.sqrt(pcov[2, 2]))],
+            ["%.2e" %(popt[2]/a), "%.2e" %(np.sqrt(pcov[2, 2])/a)],
             ["%.3f" % chi2, "n/a"],
         ]
         plt.table(
@@ -191,9 +189,8 @@ def perform_fit(lower_lim, upper_lim, plot=False, savebest=False):
 
 
 fit_results = np.zeros((7,upper_t-lower_t-window))
-# perform_fit(2,18,savebest=True)
 for i in range(lower_t, upper_t-window):
-    results = perform_fit(i,upper_t, plot=False)
+    results = perform_fit(i,upper_t, plot=True)
     fit_results[0,i-lower_t] = results[1] # save E1
     fit_results[1,i-lower_t] = results[2] # save E1 err
     fit_results[2,i-lower_t] = results[3] # save A0
@@ -202,18 +199,22 @@ for i in range(lower_t, upper_t-window):
     fit_results[5,i-lower_t] = results[6] # save A1 err
     fit_results[6,i-lower_t] = results[0] # save chi2
 
-    print(i, results[0], 2.359*results[1], 2.359*results[2])
+    print(i, results[0], results[1]/a, results[2]/a)
 
 plt.figure()
-plt.errorbar(np.arange(lower_t, upper_t-window), 2.359*np.array(fit_results[0]), yerr=(2.359*np.array(fit_results[1])), fmt="rs", capsize=4)
+plt.errorbar(np.arange(lower_t, upper_t-window), np.array(fit_results[0])/a, yerr=(np.array(fit_results[1])/a), fmt="rs", capsize=4)
 plt.xlabel(r"$t_{min}/a$")
 plt.ylabel(r"$E_1(P_z)$ (Gev)")
 plt.ylim(0,4)
-plt.text(2,3.5, "Pz = %.2fGeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
+plt.text(2,3.5, "Pz = %.2fGeV" %phys_p(a, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
 plt.title(r"Fitted $E_1$ from [$t_{min}/a$, " + f"{upper_t}]")
 if save:
     plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")
     np.save(f"{save_path}/E1_fits_Pz{Pz}.npy", fit_results)
 plt.show()
 
+
+## Uncomment the below line to save the best fit, change best_t_min and 
+#  best_t_max to be the appropriate values determined from ranging t_min. 
+# perform_fit(best_t_min, best_t_max,savebest=True) 
 

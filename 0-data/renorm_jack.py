@@ -1,28 +1,35 @@
-# Author: Ethan Baker ANL/Haverford College
 
-from operator import truediv
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
 import os
-from functions import phys_p, read_data
+from functions import phys_p
 import scienceplots
 
-plt.style.use('science')
+plt.style.use("science")
+
+"""
+Ethan Baker ANL/Haverford College
+
+This script performs the renormalization procedure using the bare matrix
+elements that are determined in raw_el_fits.py. It outputs these in both the sample
+by sample raw form and the mean and error of these determined through the
+jackknife procedure.
+"""
+
 
 Nt = 128
 Ns = 55
-a = 2.359
+a = 1/2.359 # GeV^-1
 bz_max = 30
 P0 = 1
 fits = {}
-save = True
+save = False
 t_range = np.arange(0,128)
 
 
 # Create save path
 for real in [False,True]:
-    for smear_path in ["final_results_eps10"]:
+    for smear_path in ["final_results_flow10"]:
         if smear_path == "final_results":
             smear = "05"
         else:
@@ -44,13 +51,14 @@ for real in [False,True]:
             real_matrix_el_js = np.zeros((10,33,Ns,))
             imag_matrix_el_js = np.zeros((10,33,Ns,))
 
+            # calculate renormalization for each sample for each momentum.
             for Pz in range(0,10):
                 for s in range(Ns):
                     matrix_el_j = (((real_raw_ratios[Pz,:,s]+1j*imag_raw_ratios[Pz,:,s])/
                                     (real_raw_ratios[P0,:,s] + 1j*imag_raw_ratios[P0,:,s]))
                                   *((real_raw_ratios[P0,0,s]+1j*imag_raw_ratios[P0,0,s])/
                                     (real_raw_ratios[Pz,0,s] + 1j*imag_raw_ratios[Pz,0,s]))
-                                  *(np.exp(-1j*np.arange(0,33)/a*(phys_p(a,Pz)-phys_p(a,P0))/2))
+                                  *(np.exp(-1j*np.arange(0,33)*a*(phys_p(a,Pz)-phys_p(a,P0))/2))
                                   )    
                     real_matrix_el_js[Pz,:,s] = np.real(matrix_el_j)
                     imag_matrix_el_js[Pz,:,s] = np.imag(matrix_el_j)
@@ -74,11 +82,12 @@ for real in [False,True]:
                 np.save(f"{save_path}/imag_raw_ratios_err_P0{P0}.npy", np.sqrt(Ns-1)*np.std(imag_raw_ratios, axis=2))
 
 
-
+            # produces a plot of the real and imaginary parts of the renorm.
+            # matrix elements for some of the momentum values.
             for Pz in np.arange(P0+1,10,2):
                 bz_max = 9
                 if real:
-                    plt.errorbar(phys_p(a,Pz)*np.arange(0,bz_max)/a,
+                    plt.errorbar(phys_p(a,Pz)*np.arange(0,bz_max)*a,
                                 real_matrix_el[Pz,:bz_max],
                                 yerr = real_matrix_err[Pz,:bz_max],
                                 fmt=formats[str(Pz)],
@@ -86,7 +95,7 @@ for real in [False,True]:
                                 markerfacecolor="none",
                                 label=f"$n_3$ = {Pz}")
                 else:
-                    plt.errorbar(phys_p(a,Pz)*np.arange(0,bz_max)/a,
+                    plt.errorbar(phys_p(a,Pz)*np.arange(0,bz_max)*a,
                                 imag_matrix_el[Pz,:bz_max],
                                 yerr = abs(imag_matrix_err[Pz,:bz_max]),
                                 fmt=formats[str(Pz)],

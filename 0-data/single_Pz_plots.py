@@ -1,23 +1,29 @@
-# Author: Ethan Baker ANL/Haverford College
-
-from matplotlib.lines import fillStyles
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 from functions import read_data, phys_p
 import scienceplots
 plt.style.use("science")
+
+"""
+Ethan Baker ANL/Haverford College
+
+Produces a plot of the fits for the first few z from the raw_el_fits.py. This
+replicates that fitting; it does not use its results directly. 
+
+"""
  
 Nt = 128
 Ns = 55
-a = 2.359
+a = 1/2.359 #GeV^-1
+
 t_start = 2
 t_end = 7
 dt = 1
-save = True
+save = False
 Pz = 3
 
-for smear_path in ["final_results_eps10"]:
+for smear_path in ["final_results", "final_results_flow10"]:
     if smear_path == "final_results":
         smear = "05"
     else:
@@ -31,8 +37,8 @@ for smear_path in ["final_results_eps10"]:
 
 
 
-        bestE1_tmins = [0, 1, 1, 0, 0, 0, 1, 1, 1, 1] #
-
+        bestE1_tmins = [2, 3, 3, 2, 2, 2, 3, 3, 3, 3] # E1 list from result of 
+                                                      # 2-state fit. 
 
         def real_state2ratio(t,m0, m1):
             if init_char == "T5":
@@ -79,10 +85,11 @@ for smear_path in ["final_results_eps10"]:
             imag_sample_errs) = read_data(Ns, Nt, init_char, Pz, bz, smear)
 
             E1_data = np.load(f"final_results/two_state_fits/Pz{Pz}/E1_fits_Pz{Pz}.npy")
-            E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
-            E1 = E1_data[0,bestE1_tmins[Pz]]
-            Z0 = np.sqrt(2*E0*E1_data[2,bestE1_tmins[Pz]])
-            Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz]])
+            E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)*a
+            # -2 below accounts for indexing b/c 2-state fits start at t_min=2           
+            E1 = E1_data[0,bestE1_tmins[Pz]-2]
+            Z0 = np.sqrt(2*E0*E1_data[2,bestE1_tmins[Pz]-2])
+            Z1 = np.sqrt(2*E1*E1_data[4,bestE1_tmins[Pz]-2])
 
             popt = np.load(f"{save_path}/real_popt.npy")
             pcov0 = np.load(f"{save_path}/real_pcov0.npy")
@@ -103,7 +110,6 @@ for smear_path in ["final_results_eps10"]:
             plt.errorbar(t,real_ratio_means[t_start:t_end],yerr=real_ratio_stds[t_start:t_end], fmt="ro", capsize=3, markerfacecolor='none')
             if init_char == "Z5":
                 plt.text(2.05,real_fit[0]+ 0.05*real_fit[0], f"$z/a=${bz}")
-                # plt.ylim(-0.3e-5,0.1e-5)
 
             else:
                 if real_fit[0] > 0:
@@ -111,7 +117,6 @@ for smear_path in ["final_results_eps10"]:
                 else:
                     plt.text(2.15,real_fit[0] - 0.1*real_fit[0], f"$z/a=${bz}")
 
-                # plt.ylim(-0.1e-5,0.3e-5)
 # 
             plt.plot(np.arange(t_start,t_end,dt), real_fit, "b" )
             plt.fill_between(np.arange(t_start,t_end,dt),real_fit+real_fit_err, real_fit-real_fit_err, alpha=0.2, color="blue")

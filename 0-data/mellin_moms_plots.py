@@ -1,30 +1,36 @@
-# Author Ethan Baker, ANL/Haverford College
-
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 import scienceplots
-import matplotlib as mpl
-import matplotlib.font_manager as font_manager
 from functions import phys_p
 from scipy.special import gamma
 
-a = 2.359
-P0 = 1
-# font_dirs = ["/home/bakerem/.local/lib/python3.8/site-packages/matplotlib/mpl-data/fonts/ttf"]
-# font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
-# for font_file in font_files:
-#     font_manager.fontManager.addfont(font_file)
 
-# mpl.rcParams['font.sans-serif'] = 'Lato'
-# print(mpl.rcParams['font.sans-serif'])
+"""
+Ethan Baker, ANL/Haverford College
+
+Produces plots of the Mellin moment results from "mellin_moms.py." 
+Loops through ranges of fit parameters to plot each results seperately and then
+performs jackknife resampling to come up with final result and statistical
+and systematic error, which are then saved. 
+
+The central value for jackknife calculations is the results at z_max=4 to 
+prevent double counting. However, will need to modify this if a different 
+z_max range is used. Places where changes are needed are indicated
+"""
+a = 1/2.359 # GeV^-1
+P0 = 1 # reference momentum in lattice units
+Ns = 240 # number of samples found my multiplying length of each array that
+         # is indexed in the for loop. This will need modification in general
+
+
 
 plt.style.use('science')
 plt.rcParams['figure.figsize'] = [6.5,9]
 plt.rcParams["font.size"] = 6
 
 save = True
-for smear in ["final_results", "final_results_eps10"]:
+for smear in ["final_results", "final_results_flow10"]:
     Ns = 240
     for init_char in ["T5"]:
         save_path = f"{smear}/2_state_matrix_results_jack"
@@ -57,8 +63,6 @@ for smear in ["final_results", "final_results_eps10"]:
 
                             index += 4
         # jackknife error calculation
-        # data2_adj = data2[np.where(np.abs(data2[:,0]-np.average(data2[:,0]))<np.std(data2[:,0])),0]
-        # data4_adj = data4[np.where(np.abs(data4[:,0]-np.average(data4[:,0]))<np.std(data4[:,0])),0]
         samples2     = np.zeros((Ns,))
         samples4     = np.zeros((Ns,))
         samplesh0    = np.zeros((Ns,))
@@ -66,9 +70,13 @@ for smear in ["final_results", "final_results_eps10"]:
         samples4_err = np.zeros((Ns,))
         samplesh0_err= np.zeros((Ns,))
 
+        # the indices here are meant to only take z_max=4 (central value)
+        # data for calculation of mean. These indices will need to be changed
+        # if z_max range changes. 
         mean2 = np.average(data2[80:160,0])
         mean4 = np.average(data4[80:160,0])
 
+        # Perform resampling and error calcuation
         for i in range(Ns):
             samples2[i]     = np.average(np.delete(data2[:,0], i))
             samples4[i]     = np.average(np.delete(data4[:,0], i))
@@ -78,13 +86,12 @@ for smear in ["final_results", "final_results_eps10"]:
             samples4_err[i] = np.sqrt(np.average(np.abs(np.delete(data2[:,0], i) - mean4)**2))
             samplesh0_err[i] = np.sqrt(np.abs(np.average(np.delete(datah0[:,0], i)**2) - (samplesh0[i])**2))
 
-
-        print(np.std(data2[:,0]),np.max(data2[:,0])- np.min(data2[:,0]), np.average(samples2_err))
+        # arrays for saving results
         avg2  = [mean2, np.sqrt(Ns-1)*np.std(samples2), np.average(samples2_err)]
         avg4  = [mean4, np.sqrt(Ns-1)*np.std(samples4), np.average(samples4_err)]
         avgh0 = [np.average(samplesh0), np.sqrt(Ns-1)*np.std(samplesh0), np.average(samplesh0_err)]
 
-        print(avg2, avg4, avgh0)
+        print(avg2, avg4)
         if save:
             os.makedirs(f"{save_path}/{init_char}/final_mm", exist_ok=True)
             np.save(f"{save_path}/{init_char}/final_mm/avg2_corr_P0{P0}.npy", avg2)

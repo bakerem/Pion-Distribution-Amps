@@ -1,20 +1,30 @@
-# Author Ethan Baker, ANL/Haverford College
-
 import numpy as np
-import matplotlib.pyplot as plt
 import os
-from scipy.optimize import curve_fit, minimize
+from scipy.optimize import minimize
 from scipy.special import gamma
 from functions import x_dep_many_m_ope, phys_p, chi2
 
+"""
+Ethan Baker, ANL/Haverford College
+
+Essentially follows the same structure as "mellin_moms.py," so for more info
+look at the documentation there. There is a slightly different fitting function
+that incorporates sns into the Mellin moments so that they are fitting 
+parameters. Unlike there, it is better to have the final range of bz_min/bz_max 
+here instead of running each case seperately. 
+This uses the results from alpha from x_dep_alpha.py, so make sure
+to run that first. Also, delta is the allowed deviations from the Ansatz, and 
+0.05-0.2 is a typical range. 
+"""
+
 Nt = 128
 Ns = 55
-gamma_E = 0.57721
 
-a = 2.359 # GeV^-1
-mu = 2    # GeV
-P0 = 1
-Ng = 2
+a = 1/2.359 # GeV^-1
+gamma_E = 0.57721 # Euler constant
+
+P0 = 1 # Reference momentum
+Ng = 2 # Truncation order
 
 bz_min_low = 2
 bz_min_up  = 3
@@ -28,13 +38,13 @@ Pz_min_up  = 6
 Pz_max_low = 9
 Pz_max_up= 10
 
-save = True
+save = False
 
 # initialize empty arrays for saving data
 for delta in [0.05, 0.10, 0.20]:
     print(f"{delta}")
     for Nh in [0]:
-        for smear in ["final_results"]:
+        for smear in ["final_results", "final_results_flow10"]:
             for init_char in ["T5"]:
                 for N_max in [2]:
                     for kappa in np.arange(0.95,1.15,0.01):
@@ -80,11 +90,11 @@ for delta in [0.05, 0.10, 0.20]:
                                         alpha = alphas[index]
                                         if Nh == 0:
                                             def ratio(bz, Pz, s1, s2 ):
-                                                    mu = kappa*2*np.exp(-gamma_E)/(bz/a)
+                                                    mu = kappa*2*np.exp(-gamma_E)/(bz*a)
                                                     # mu =2 
                                                     alpha_s = 0.303
-                                                    num   = x_dep_many_m_ope(bz/a, alpha, s1, s2, 0, 0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char, Ng)
-                                                    denom = x_dep_many_m_ope(bz/a, alpha, s1, s2, 0, 0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char, Ng)
+                                                    num   = x_dep_many_m_ope(bz*a, alpha, s1, s2, 0, 0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char, Ng)
+                                                    denom = x_dep_many_m_ope(bz*a, alpha, s1, s2, 0, 0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char, Ng)
                                                     ratio_result = num/denom
                                                     return np.real(ratio_result)
                                             
@@ -97,11 +107,11 @@ for delta in [0.05, 0.10, 0.20]:
                                                 
                                         elif Nh == 1:
                                             def ratio(bz, Pz, s1, s2, h0):
-                                                mu = kappa*2*np.exp(-gamma_E)/(bz/a)
+                                                mu = kappa*2*np.exp(-gamma_E)/(bz*a)
                                                 # mu = 2
                                                 alpha_s = 0.303
-                                                num   = x_dep_many_m_ope(bz/a, alpha, s1, s2, 0, h0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char, Ng)
-                                                denom = x_dep_many_m_ope(bz/a, alpha, s1, s2, 0, h0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char, Ng)
+                                                num   = x_dep_many_m_ope(bz*a, alpha, s1, s2, 0, h0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char, Ng)
+                                                denom = x_dep_many_m_ope(bz*a, alpha, s1, s2, 0, h0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char, Ng)
                                                 ratio_result = num/denom
                                                 return np.real(ratio_result)
                                             
@@ -128,9 +138,11 @@ for delta in [0.05, 0.10, 0.20]:
             
                                         chi2s[index] = chi2_result
                                         A = (2**(1+2*alpha)*gamma(1.5+alpha))/(np.sqrt(np.pi)*gamma(1+alpha))
+                                        # these are the results for Ng=2, needs
+                                        # modification is Ng != 2
                                         mm2 = (5+2*alpha+2*s1+6*alpha*s1+4*alpha**2*s1)/(15+16*alpha+4*alpha**2)
-                                        mm4 = (3*(9+2*alpha)*(7+2*alpha+4*(1+a)*(1+2*alpha)*s1) + 
-                                            4*(1+alpha)*(2+alpha)*(1+2*alpha)*(3+2*alpha)*s2)/((3+2*alpha)*(5+2*alpha)*(7+2*alpha)*(9+2*alpha))
+                                        mm4 = ((27+6*alpha)*(7+2*alpha+(4+4*alpha)*(1+2*alpha)*s1)+
+                                            4*(1+alpha)*(2+alpha)+(1+2*alpha)*(3+2*alpha)*s2*gamma(1.5+alpha))/(16*gamma(5.5+alpha))
                                         print(mm2[index], mm4[index], chi2_result)
                                         
                                         # print(s1[index], s2[index], chi2_result)

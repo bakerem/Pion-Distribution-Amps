@@ -1,16 +1,32 @@
-# Author Ethan Baker, ANL/Haverford College
-
 import numpy as np
 import os
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-from functions import m_ope, phys_p, alpha_func, chi2_orig
+from functions import m_ope, phys_p
+
+"""
+Ethan Baker, ANL/Haverford College
+
+The script for calculating the Mellin moments from the lattice data. There are
+several if statements used to distinguish between if higher twist or lattice
+corrections are included. The main body of the script is a for statement
+that loops through different fitting parameters. The ranges for bz and Pz
+are denoted by _low and _max subscripts and the upper limit is exclusive. So,
+if you want the lower Pz limit to range from 2 to 5, set Pz_min_low = 2 and
+Pz_min_low = 6. 
+
+The results are saved in an array that contains the results for set of Pz and bz
+ranges and a new array is produced for each Nh, and kappa. In general, it is best
+practice to only run over one set of [bz_min, bz_max], because it is easy to 
+concatenate these results later. 
+
+"""
+
 
 Nt = 128
-a = 2.359 # GeV^-1
-gamma_E = 0.57721
-# alpha_s = 0.303
-# mu = 2    # GeV
+a = 1/2.359 # GeV^-1
+gamma_E = 0.57721 # Euler constant
+
 P0 = 1
 N_max = 2
 Ns = 55
@@ -27,10 +43,10 @@ Pz_min_up  = 6
 
 Pz_max_low = 9
 Pz_max_up= 10
-save = True
+save = False
 
 # initialize empty arrays for saving data
-for smear in ["final_results", "final_results_eps10"]:
+for smear in ["final_results", "final_results_flow10"]:
     for init_char in ["T5"]:
         print(init_char)
         for Nh in [0]:
@@ -79,17 +95,17 @@ for smear in ["final_results", "final_results_eps10"]:
                                 cov = (Ns-1)*cov 
                                 cov_inv = np.linalg.inv(cov)
 
-                                # function for fitting calculates ratio and wraps around Mellin-OPE of 
-                                # the matrix elements 
-                                # different functions for each of the combinations of Nh and 0
+                                # function for fitting calculates ratio and wraps 
+                                # around Mellin-OPE of the matrix elements. 
+                                # Different functions for each Nh
                                 if Nh == 0:
                                     def ratio(bzPz, mm2, mm4,):
                                         bz, Pz = bzPz_range
-                                        mu = kappa*2*np.exp(-gamma_E)/(bz/a)
+                                        mu = kappa*2*np.exp(-gamma_E)/(bz*a)
                                         # mu = 2
                                         alpha_s = 0.303
-                                        num   = m_ope(bz/a, mm2, mm4, 0, 0, 0, 0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char)
-                                        denom = m_ope(bz/a, mm2, mm4, 0, 0, 0, 0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char)
+                                        num   = m_ope(bz*a, mm2, mm4, 0, 0, 0, 0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char)
+                                        denom = m_ope(bz*a, mm2, mm4, 0, 0, 0, 0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char)
                                         ratio_result = num/denom
                                         return np.real(ratio_result)
                                 
@@ -100,12 +116,10 @@ for smear in ["final_results", "final_results_eps10"]:
                                 elif Nh == 1:
                                     def ratio(bzPz, mm2, mm4, h0,alpha_s,):
                                         bz, Pz = bzPz_range
-                                        mu = kappa*2*np.exp(-gamma_E)/(bz/a)
-                                        alpha_s = alpha_func(mu)
-                                        # mu = 2
+                                        mu = kappa*2*np.exp(-gamma_E)/(bz*a)
                                         alpha_s = 0.303
-                                        num   = m_ope(bz/a, mm2, mm4, 0, 0, 0, h0, 0, 2*N_max, 1, phys_p(a,Pz), alpha_s, mu, init_char)
-                                        denom = m_ope(bz/a, mm2, mm4, 0, 0, 0, h0, 0, 2*N_max, 1, phys_p(a,P0), alpha_s, mu, init_char)
+                                        num   = m_ope(bz*a, mm2, mm4, 0, 0, 0, h0, 0, 2*N_max, 1, phys_p(a,Pz), alpha_s, mu, init_char)
+                                        denom = m_ope(bz*a, mm2, mm4, 0, 0, 0, h0, 0, 2*N_max, 1, phys_p(a,P0), alpha_s, mu, init_char)
                                         ratio_result = num/denom
                                         return np.real(ratio_result)
                                     
@@ -115,6 +129,8 @@ for smear in ["final_results", "final_results_eps10"]:
                                                     p0=(0.25,0.15,0.07,0.303),
                                                     bounds =[(-np.inf,-np.inf, -1,), (np.inf,np.inf, 1,)],
                                                     sigma=cov)
+                                    h0s[index] = popt[2]
+                                    h0s_err[index] = np.sqrt(pcov[2,2])
                                 
                                 # calculate chi^2
                                 chi2 = (np.sum(
@@ -126,16 +142,11 @@ for smear in ["final_results", "final_results_eps10"]:
                                 # save data
                                 moms2[index] = popt[0]
                                 moms2_err[index] = np.sqrt(pcov[0,0])
-                                # moms2_err[index] = pcov0
                                 moms4[index] = popt[1]
                                 moms4_err[index] = np.sqrt(pcov[1,1])
-                                # moms4_err[index] = pcov1
-                                # h0s[index] = popt[2]
-                                # h0s_err[index] = np.sqrt(pcov[2,2])
+                                
     
                                 chi2s[index] = chi2
-                                # print(popt)
-                                # print(kappa, popt[0], popt[1],  chi2)
                                 print(moms2[index], moms2_err[index], moms4[index], chi2)
                                 
                                 index += 1
@@ -148,8 +159,8 @@ for smear in ["final_results", "final_results_eps10"]:
                                     np.save(f"{save_path}/mellin_moms2_err_Nmax{N_max}_h{Nh}_l{0}_P0{P0}_zmax{bz_max}_resum_k"+"%.2f"%kappa+".npy", moms2_err)
                                     np.save(f"{save_path}/mellin_moms4_Nmax{N_max}_h{Nh}_l{0}_P0{P0}_zmax{bz_max}_resum_k"+"%.2f"%kappa+".npy",moms4)
                                     np.save(f"{save_path}/mellin_moms4_err_Nmax{N_max}_h{Nh}_l{0}_P0{P0}_zmax{bz_max}_resum_k"+"%.2f"%kappa+".npy", moms4_err)
-                                    # np.save(f"{save_path}/mellin_h0_Nmax{N_max}_h{Nh}_l{0}_P0{P0}_zmax{bz_max}_resum_k"+"%.2f"%kappa+".npy", h0s)
-                                    # np.save(f"{save_path}/mellin_h0_err_Nmax{N_max}_h{Nh}_l{0}_P0{P0}_zmax{bz_max}_resum_k"+"%.2f"%kappa+".npy", h0s_err)
+                                    np.save(f"{save_path}/mellin_h0_Nmax{N_max}_h{Nh}_l{0}_P0{P0}_zmax{bz_max}_resum_k"+"%.2f"%kappa+".npy", h0s)
+                                    np.save(f"{save_path}/mellin_h0_err_Nmax{N_max}_h{Nh}_l{0}_P0{P0}_zmax{bz_max}_resum_k"+"%.2f"%kappa+".npy", h0s_err)
 
                                     # np.save(f"{save_path}/mellin_moms6_Nmax{N_max}_h{Nh}_l{0}.npy",moms6)
                                     # np.save(f"{save_path}/mellin_moms6_err_Nmax{N_max}_h{Nh}_l{0}.npy", moms6_err)

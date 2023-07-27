@@ -6,10 +6,10 @@ from math import factorial
 from scipy.special import gamma, jv, gegenbauer
 import matplotlib.pyplot as plt
 
-
+# constants that come up frequently 
 C_F = 4/3
 gamma_E = 0.57721
-a = 2.359
+a = 1/2.359
 mu_0 = 2
 alpha_0 = 0.303
 beta_0 = (33-2*3)/(6*2*np.pi)
@@ -78,7 +78,8 @@ def read_data(Ns: int, Nt: int, init_char: str, Pz: int, bz: int, smear:str) -> 
 
 def phys_p(a: float, n: int):
     """takes a in GeV^-1 and returns physical momentum assosicated with n """
-    return 2 * np.pi * n * a / 64
+    # 64 is the lattice spatial length and may need modification
+    return 2 * np.pi * n / (a*64)
 
 def alpha_func(as0, mu):
     a_s = (as0)/(1+beta_0*as0*np.log(0.25*mu**2))
@@ -120,7 +121,7 @@ def m_ope(bz, mm2, mm4, mm6, mm8, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu,  init
                 term2 += m_coeff_T5(n,m, bz, alpha_s, mu)*m_moms[m]*ev_facs[m]
             h_tw2 += term1*term2
     
-    l_corr = l*(Pz*a)**2
+    l_corr = l*(Pz/a)**2
     h_corr = 0
     hs = [h0,h1]
     for i in range(0, N_ht):
@@ -286,7 +287,11 @@ def m_coeff_T5(n,m, bz, alpha_s, mu):
     return coeff
 
 def x_dep1_m_ope(bz, alpha, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu, init_char):
-    
+    """
+    Mellin OPE using definitions of mellin moms that incorporate alpha
+    for fitting. These are calculated analytically. Otherwise works the same
+    and m_ope. 
+    """
     mm2 = 1/(3+2*alpha)
     mm4 = 3/(15+16*alpha+4*alpha**2)
     mm6 = 15/(105 + 142*alpha + 60*alpha**2 + 8*alpha*3)
@@ -317,7 +322,7 @@ def x_dep1_m_ope(bz, alpha, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu, init_char):
                 term2 += m_coeff_T5(n,m, bz, alpha_s, mu)*m_moms[m]*ev_facs[m]
             h_tw2 += term1*term2
     
-    l_corr = l*(Pz*a)**2
+    l_corr = l*(Pz/a)**2
     h_corr = 0
     hs = [h0,h1]
     for i in range(0, N_ht):
@@ -326,6 +331,12 @@ def x_dep1_m_ope(bz, alpha, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu, init_char):
     return h_tw2 + l_corr + h_corr
 
 def x_dep_many_m_ope(bz, alpha, s1, s2, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu, init_char, Ng):
+    """
+    Mellin OPE using definitions of mellin moms that incorporate alpha, and sns
+    for fitting. These are calculated analytically. Otherwise works the same
+    and m_ope. 
+    """
+    
     if Ng == 1:
         mm2 = (5+2*alpha+2*s1+6*alpha*s1+4*alpha**2*s1)/(15+16*alpha+4*alpha**2)
         mm4 = (3*(7+2*alpha+4*(1+alpha)*(1+2*alpha)*s1))/((3+2*alpha)*(5+2*alpha)*(7+2*alpha))
@@ -335,13 +346,9 @@ def x_dep_many_m_ope(bz, alpha, s1, s2, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu,
               4*(1+alpha)*(2+alpha)+(1+2*alpha)*(3+2*alpha)*s2*gamma(1.5+alpha))/(16*gamma(5.5+alpha))
     elif Ng == 3:
         mm2 = (5+2*alpha+2*s1+6*alpha*s1+4*alpha**2*s1)/(15+16*alpha+4*alpha**2)
-        mm4 = (3*(9+2*alpha)*(7+2*alpha+4*(1+a)*(1+2*alpha)*s1) + 
+        mm4 = (3*(9+2*alpha)*(7+2*alpha+4*(1+alpha)*(1+2*alpha)*s1) + 
               4*(1+alpha)*(2+alpha)*(1+2*alpha)*(3+2*alpha)*s2)/((3+2*alpha)*(5+2*alpha)*(7+2*alpha)*(9+2*alpha))
-    
-    # gm6  = A*2**(3-2*alpha)*np.sqrt(np.pi)*gamma(4+alpha)/((7+2*alpha)*(9+2*alpha)*(11+2*alpha)*(13+2*alpha)*gamma(0.5+alpha))
-    # gm8  = 105*2**(-3-2*alpha)*(1+2*alpha)*np.sqrt(np.pi)*gamma(2+alpha)/gamma(6.5+alpha)
-    # gm10 = 4725*2**(-6-2*alpha)*(1+2*alpha)*np.sqrt(np.pi)*gamma(2+alpha)/gamma(7.5+alpha)
-    
+        
     ev2 = (mu/2)**(-25/(6*4*np.pi)*alpha_s*C_F)
     ev4 = (mu/2)**(-91/(15*4*np.pi)*alpha_s*C_F)
     ev_facs = [1,0,ev2, 0, ev4]
@@ -365,7 +372,7 @@ def x_dep_many_m_ope(bz, alpha, s1, s2, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu,
                 term2 += m_coeff_T5(n,m, bz, alpha_s, mu)*m_moms[m]*ev_facs[m]
             h_tw2 += term1*term2
     
-    l_corr = l*(Pz*a)**2
+    l_corr = l*(Pz/a)**2
     h_corr = 0
     hs = [h0,h1]
     for i in range(0, N_ht):
@@ -374,24 +381,6 @@ def x_dep_many_m_ope(bz, alpha, s1, s2, l, h0, h1, N_max, N_ht, Pz, alpha_s, mu,
     return h_tw2 + l_corr + h_corr
 
 
-# z_range = np.arange(0,10,0.01)
-# mu_range = 2*np.exp(-gamma_E)/(z_range/a)
-# # plt.plot(z_range,m_coeff_T5(2,0,z_range/a,alpha_func(mu_range), mu_range)*(alpha_func(mu_range)/alpha_0)**(-25/(6*4*np.pi*beta_0)*C_F), label="C(2,0)")
-
-# # plt.plot(z_range,m_coeff_T5(4,0,z_range/a,alpha_func(mu_range), mu_range)*(alpha_func(mu_range)/alpha_0)**(-91/(15*4*np.pi*beta_0)*C_F), label="C(4,0)")
-
-# # plt.plot(z_range,
-# #          2+m_coeff_T5(2,0,z_range/a,alpha_func(mu_range), mu_range) - 
-# #          m_coeff_T5(0,0,z_range/a,alpha_func(mu_range), mu_range), 
-# #          label="1+C(2,0)-C(0,0)")
-# plt.plot(z_range, alpha_func(mu_range))
-# # plt.ylim(0, 2)
-# plt.legend()
-# plt.xlabel("z/a")
-# plt.ylabel(r"$\alpha_s$")
-# plt.title("Evolution of $alpha_s$")
-# plt.savefig("alpha_ev.png")
-# plt.show()
 
 ### Definitions for Conformal OPE ###
 def c_ope(bz, an2, an4, an6, an8, l, h0, h1, N_max, N_ht, Pz, alpha, mu, init_char):
@@ -406,7 +395,7 @@ def c_ope(bz, an2, an4, an6, an8, l, h0, h1, N_max, N_ht, Pz, alpha, mu, init_ch
     for n in range(0,N_max+1,2):
         h_tw2 += ans[n]*F_n(n, bz, Pz, init_char, alpha, mu)
 
-    l_corr = l*(Pz*a)**2
+    l_corr = l*(Pz/a)**2
     h_corr = 0
     hs = [h0,h1]
     for i in range(0, N_ht):
@@ -415,6 +404,9 @@ def c_ope(bz, an2, an4, an6, an8, l, h0, h1, N_max, N_ht, Pz, alpha, mu, init_ch
     return h_tw2 + l_corr + h_corr
 
 def c_n(n, init_char, alpha_s):
+    """
+    coefficients used in C-OPE
+    """
     if init_char == "Z5":
         delta = 1
     else:
@@ -447,6 +439,10 @@ def F_n(n, bz, Pz, init_char, alpha_s, mu):
 
 ### Modified solver for z-dependence ###
 def chi2(params:list, bzPz_range:np.array, delta:float, cov_inv:np.array, ratio, matrix_els):
+    """
+    Calculates chi-squared of a function, but is modified to allow for deviations
+    in the Ansatz.
+    """
     bz, Pz = bzPz_range
     chi2 = 0
     for i, bzPz in enumerate(bzPz_range.transpose()):
@@ -456,21 +452,13 @@ def chi2(params:list, bzPz_range:np.array, delta:float, cov_inv:np.array, ratio,
             sns = params[0:2]
             chi2 += ((ratio(bz, Pz, *params) - matrix_els[Pz, bz])*cov_inv[i,j]*(ratio(bz1, Pz1, *params) - matrix_els[Pz1, bz1]))
     chi2 += np.sum((sns/delta)**2)
-    # print(chi2)
-    return chi2
-
-def chi2_orig(params:list, bzPz_range:np.array, cov_inv:np.array, ratio, matrix_els):
-    bz, Pz = bzPz_range
-    chi2 = 0
-    for i, bzPz in enumerate(bzPz_range.transpose()):
-        bz, Pz = bzPz
-        for j, bzPz1 in enumerate(bzPz_range.transpose()):
-            bz1, Pz1 = bzPz1
-            chi2 += ((ratio(bz, Pz, *params) - matrix_els[Pz, bz])*cov_inv[i,j]*(ratio(bz1, Pz1, *params) - matrix_els[Pz1, bz1]))
-    # print(chi2)
     return chi2
 
 def phi(u, alpha, s1, s2):
+    """
+    phi(u) constructed using gegenbauer polynomials. Can add additional terms
+    if more sns are available. 
+    """
     A = 2**(1+2*alpha)*gamma(1.5+alpha)/(np.sqrt(np.pi)*gamma(1+alpha))
     y = u**alpha*(1-u)**alpha*(1+
                                 s1*gegenbauer(2,0.5+alpha)(1-2*u)+

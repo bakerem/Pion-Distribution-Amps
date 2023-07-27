@@ -5,20 +5,23 @@ import matplotlib.pyplot as plt
 import os
 import scienceplots
 from matplotlib.ticker import MaxNLocator
-
-
 plt.style.use('science')
 
-# init_char = "Z5"
+"""
+Ethan Baker ANL/Haverford College
+
+Produces plots that show the results of the bare matrix elements for a variety
+of z, for the real and imaginary parts. 
+"""
 Nt = 128
 Ns = 10
-a = 2.359
+
 fits = {}
 real = True
 save = True
 
 for real in [True]:
-    for smear_path in [ "final_results_eps10"]:
+    for smear_path in ["final_results", "final_results_flow10"]:
         if smear_path == "final_results":
             smear = "05"
         else:
@@ -81,5 +84,5 @@ for real in [True]:
                     plt.ylabel(r"Imag $h^B(z,P_3)$")
                     plt.title(f"Extrapolated Matrix Elements; {init_char}")
                     if save:
-                        plt.savefig(f"{save_path}/Pz{Pz}/imag_extrapolated_R.pdf")
+                        plt.savefig(f"{save_path}/Pz{Pz}/imag_extrapolated_R_Pz{Pz}.pdf")
                 # plt.show()

@@ -2,29 +2,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scienceplots
 import os
-from scipy.special import gegenbauer, gamma
-import scipy.integrate as integrate
-import matplotlib as mpl
-import matplotlib.font_manager as font_manager
+from scipy.special import gamma
 from functions import phi
 
 plt.style.use("science")
-P0 = 1
 
-# font_dirs = ["/home/bakerem/.local/lib/python3.8/site-packages/matplotlib/mpl-data/fonts/ttf"]
-# font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
-# for font_file in font_files:
-#     font_manager.fontManager.addfont(font_file)
+"""
+Ethan Baker, ANL/Haverford College
 
-# mpl.rcParams['font.sans-serif'] = 'Lato'
-# print(mpl.rcParams['font.sans-serif'])
-# plt.rcParams["font.size"] = 14
+Produces x-dependent plots and final estimate of s1, s2, and mm2, mm4 from
+results in x_dep_sns.py. Loops through choices of fit parameters to get final 
+estimate. 
 
-Ns = 240
+The central value for jackknife calculations is the results at z_max=4 to 
+prevent double counting. However, will need to modify this if a different 
+z_max range is used. Places where changes are needed are indicated
+"""
+
+P0 = 1 # Refence momentum
+Ns = 240 # number of samples for jackknife, product of indexing arrays in loops
 save = True
 Ng = 2
 for delta in [5, 10, 20]:
-    for smear in ["final_results", "final_results_eps10"]:
+    for smear in ["final_results", "final_results_flow10"]:
         for init_char in ["T5"]:
             alphas =  np.zeros((Ns,))
             s1s = np.zeros((Ns,))
@@ -38,11 +38,12 @@ for delta in [5, 10, 20]:
                         alpha  = np.load(f"{smear}/2_state_matrix_results_jack/{init_char}/mellin_moms/mellin_alpha_Nmax{2}_h{Nh}_l{Nl}_P0{P0}_resum_k"+"%.2f"%kappa+".npy")
                         s1     = np.load(f"{save_path}/mellin_s1_Nmax{2}_h{Nh}_l{Nl}_Ng{Ng}_d{delta}_P0{P0}_resum_k"+"%.2f"%kappa+".npy")
                         s2     = np.load(f"{save_path}/mellin_s2_Nmax{2}_h{Nh}_l{Nl}_Ng{Ng}_d{delta}_P0{P0}_resum_k"+"%.2f"%kappa+".npy")
-                        # h0     = np.load(f"{save_path}/mellin_h0_Nmax{2}_h{Nh}_l{Nl}_Ng{Ng}_d{delta}_P0{P0}_resum_k"+"%.2f"%kappa+".npy")
+                        if Nh == 1:
+                            h0     = np.load(f"{save_path}/mellin_h0_Nmax{2}_h{Nh}_l{Nl}_Ng{Ng}_d{delta}_P0{P0}_resum_k"+"%.2f"%kappa+".npy")
+                            h0s[index:index+4] = h0
                         alphas[index:index+12] = alpha
                         s1s[index:index+12] = s1
                         s2s[index:index+12] = s2
-                        # h0s[index:index+4] = h0
                         index += 12
             mm2s = (5+2*alphas+2*s1s+6*alphas*s1s+4*alphas**2*s1s)/(15+16*alphas+4*alphas**2)
             mm4s = ((27+6*alphas)*(7+2*alphas+(4+4*alphas)*(1+2*alphas)*s1s)+
@@ -72,6 +73,9 @@ for delta in [5, 10, 20]:
             phi_samples     = np.zeros((len(np.arange(0,1.01,0.001)),Ns))
             phi_err_samples = np.zeros((len(np.arange(0,1.01,0.001)),Ns,))
 
+            # the indices here are meant to only take z_max=4 (central value)
+            # data for calculation of mean. These indices will need to be changed
+            # if z_max range changes. 
             mean2      = np.average(mm2s[80:160])
             mean4      = np.average(mm4s[80:160])
             mean_alpha = np.average(alphas[80:160])
@@ -79,6 +83,7 @@ for delta in [5, 10, 20]:
             mean_s2     = np.average(s2s[80:160])
             meanh0     = np.average(h0s[80:160])
             meanphi    = np.average(phis[:,80:160], axis=1)
+            # perform resampling procedure
             for i in range(len(s1s)):
                 alpha_samples[i] = np.average(np.delete(alphas, i))
                 s1_samples[i]    = np.average(np.delete(s1s, i))
@@ -99,6 +104,7 @@ for delta in [5, 10, 20]:
                 mm4_err_samples[i]   = np.sqrt(np.average(np.abs(np.delete(mm4s, i) - mean4)**2))
                 alpha_err_samples[i] = np.sqrt(np.average(np.abs(np.delete(alphas, i) - mean_alpha)**2))
 
+            # save results
             alpha = np.average(alpha_samples)
             alpha_err = np.sqrt(len(alphas)-1)*np.std(alpha_samples)
 
@@ -106,8 +112,6 @@ for delta in [5, 10, 20]:
             s1_err = np.sqrt(len(s1s)-1)*np.std(s1_samples)
             s2 = np.average(s2_samples)
             s2_err = np.sqrt(len(s2s)-1)*np.std(s2_samples)
-            # print(alpha, alpha_err, s1, s1_err, s2, s2_err,)
-            print( np.std(mm2s), np.average(mm2_err_samples))
 
 
             mm2 = mean2
@@ -125,28 +129,15 @@ for delta in [5, 10, 20]:
             print(mm2, mm2_err, mm2_sys_err, mm4, mm4_err, mm4_sys_err)
             if save:
                 os.makedirs(f"{save_path}/{init_char}/final_mm", exist_ok=True)
-                np.save(f"{smear}/2_state_matrix_results_jack/{init_char}/final_mm/ans_mm2_nocorr_d{delta}_P0{P0}.npy", np.array((mm2, mm2_err, mm2_sys_err)))
-                np.save(f"{smear}/2_state_matrix_results_jack/{init_char}/final_mm/ans_mm4_nocorr_d{delta}_P0{P0}.npy", np.array((mm4, mm4_err, mm4_sys_err)))
-                np.save(f"{smear}/2_state_matrix_results_jack/{init_char}/final_mm/ans_h0_nocorr_d{delta}_P0{P0}.npy", np.array((h0, h0_err, h0_sys_err)))
+                np.save(f"{smear}/2_state_matrix_results_jack/{init_char}/final_mm/ans_mm2_nocorr_d{delta}_P0{P0}.npy", 
+                        np.array((mm2, mm2_err, mm2_sys_err)))
+                np.save(f"{smear}/2_state_matrix_results_jack/{init_char}/final_mm/ans_mm4_nocorr_d{delta}_P0{P0}.npy", 
+                        np.array((mm4, mm4_err, mm4_sys_err)))
+                np.save(f"{smear}/2_state_matrix_results_jack/{init_char}/final_mm/ans_h0_nocorr_d{delta}_P0{P0}.npy", 
+                        np.array((h0, h0_err, h0_sys_err)))
 
-
-            def mmn(u, n,phi, alpha,s1, s2):
-                y = (1-2*u)**n*phi(u, alpha,s1, s2)
-                return y 
-            # area = integrate.quad(phi,0,1,args=(alpha,s1, s2))
-            # mm2_check = integrate.quad(mmn,0,1,args=(2, phi, alpha,s1, s2))
-            # mm4_check = integrate.quad(mmn,0,1,args=(4, phi, alpha,s1, s2))
-            # print("Area is %.3f, mm2 is %.3f, mm4 is %.3f" %(area[0]-1, mm2_check[0], mm4_check[0]))
-            # phi_err1 = phi(np.arange(0,1.01,0.001), alpha, s1, s2)
-            # phi_err2
-            # phi_errt
-            phi_err1 = phi(np.arange(0,1.01,0.001), alpha+ alpha_err + np.average(alpha_err_samples) , s1, s2) - phi(np.arange(0,1.01,0.001), alpha, s1, s2)
-            phi_err2 = phi(np.arange(0,1.01,0.001), alpha, s1 + s1_err + np.average(s1_err_samples), s2) - phi(np.arange(0,1.01,0.001), alpha, s1, s2)
-            phi_err3 = phi(np.arange(0,1.01,0.001), alpha, s1 + s1_err, s2 + s2_err + np.average(s2_err_samples)) - phi(np.arange(0,1.01,0.001), alpha, s1, s2)
-            phi_errt = np.sqrt(phi_err1**2 + phi_err2**2 + phi_err3**2)
             init_conv = {"Z5": r"$\gamma_3\gamma_5$", "T5": r"$\gamma_0\gamma_5$"}
            
-            print(len(s1s))
             plt.figure()
             plt.plot(np.arange(0,1.01,0.001),meanphi, label="Ansatz Fit")
             plt.fill_between(np.arange(0,1.01,0.001),
@@ -155,15 +146,11 @@ for delta in [5, 10, 20]:
                             color="#CD202C",
                             alpha=0.2)
             plt.fill_between(np.arange(0,1.01,0.001),
-                            meanphi  - np.average(phi_err_samples, axis=1),# np.average(phi_err_samples), 
-                            meanphi  + np.average(phi_err_samples, axis=1),#np.average(phi_err_samples),
+                            meanphi  - np.average(phi_err_samples, axis=1), 
+                            meanphi  + np.average(phi_err_samples, axis=1),
                             color="#CD202C",
                             alpha=0.2)
-            # plt.fill_between(np.arange(0,1.01,0.001),
-            #                 meanphi - np.sqrt(len(s1s)-1)*np.std(phi_samples, axis=1) - np.average(phi_err_samples), 
-            #                 phi(np.arange(0,1.01,0.001), alpha,s1, s2) + np.sqrt(len(s1s)-1)*np.std(phi_samples, axis=1) + np.average(phi_err_samples),
-            #                 color="#0082CA",
-            #                 alpha=0.2)
+
             plt.xlim(0,1)
             # plt.title(f"$\\phi(u)$")
             plt.axhline(1,color="black", linestyle="dashed", label="Flat DA")

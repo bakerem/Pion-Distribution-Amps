@@ -12,13 +12,23 @@ plt.style.use('science')
 Ethan Baker, Haverford College/ANL
 Uses a one-state two-parameter fit for fitting C2pt data. Pz gives the
 momentum of the data in simulation units, p0 is an initial guess for 
-fitting and bounds are bounds for the fit. 
+fitting and bounds are bounds for the fit. This is mostly used to check the
+data to see if it conforms to the dispersion relation, but there may be some
+errors since it is only a one parameter fit.
+
+The results of this fit are used in "one_state_plots.py" in this directory
+to produce a plot of the dispersion relation. That relies on a list called 
+bestE0s, which is put together manually by finding the t_min value that
+produces the fit with the lowest chi-squared during the fit. These are printed
+when the script is run to allow for easy computation. 
 """
 
 Nt = 128
-Pz = 0
 Ns = 55
-save = True
+a = 1/2.359 # GeV^-1
+
+Pz = 0
+save = False
 p0 = (1e8, 0.1)
 bounds = ([1e6,0],[1e10,10])
 
@@ -164,7 +174,7 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         tab_cols = ("Value", "Error")
         tab_rows = ("A0", "E0", r"$\chi^2$")
         cells = [["%.2e" %popt[0], "%.2e" %np.sqrt(pcov[0,0])]\
-                ,["%.2e" %(2.359*popt[1]),"%.2e" %(2.359*np.sqrt(pcov[1,1]))]\
+                ,["%.2e" %(popt[1]/a),"%.2e" %(np.sqrt(pcov[1,1])/a)]\
                 ,["%.3f" %chi2, "n/a"]]
         plt.table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="upper center", colWidths=[0.2,0.2])
         plt.xlabel("$n_t$")
@@ -179,16 +189,13 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         # effective mass plots
         plt.figure()
         plt.errorbar(df["t"].iloc[lower_lim:upper_lim],
-                    2.359*roots[lower_lim:upper_lim], 
-                    yerr=2.359*np.abs(roots_err[lower_lim:upper_lim]),
+                    roots[lower_lim:upper_lim]/a, 
+                    yerr=np.abs(roots_err[lower_lim:upper_lim])/a,
                     capsize=3,
                     fmt="bs",
                     markerfacecolor="none"
                     )
 
-        # plt.plot(df["t"].iloc[lower_lim:upper_lim], 
-        #         2.359*np.ones((upper_lim-lower_lim,))*obj_func_meff(df["t"].iloc[lower_lim:upper_lim], 
-        #         *popt_meff))
 
         plt.xlabel("$t/a$")
         plt.ylabel(r"$m_{eff}$ (GeV)")
@@ -197,7 +204,7 @@ def perform_fit(lower_lim, upper_lim, plot_raw = False, plot_meff = False):
         plt.fill_between([20,40],0.13,0.15, alpha=0.2, color="blue",)
         # tab_cols = ("Value", "Error")
         # tab_rows = ("$m_{eff}$", r"$\chi^2$")
-        # cells = [["%.2e" %(2.359*popt_meff[0]), "%.2e" %(2.359*np.sqrt(pcov_meff[0,0]))]\
+        # cells = [["%.2e" %(popt_meff[0]/a), "%.2e" %(np.sqrt(pcov_meff[0,0])/a)]\
         #         ,["%.3f" %chi2_meff, "n/a"]]
         # plt.table(cellText=cells, rowLabels=tab_rows, colLabels=tab_cols, loc="upper center", colWidths=[0.2,0.2])
         if save == True:
@@ -217,19 +224,19 @@ for i in range(lower_t, upper_t-window):
     fit_results[2,i-lower_t] = results[3] # save A0
     fit_results[3,i-lower_t] = results[4] # save A0 err
     fit_results[4,i-lower_t] = results[0] # save chi2
-    print(i, results[0], 2.359*results[1], 2.359*results[2])
+    print(i, results[0], results[1]/a, results[2]/a)
 
 plt.figure()
 plt.errorbar(np.arange(lower_t, upper_t-window), 
-             2.359*np.array(fit_results[0]), 
-             yerr=(2.359*np.array(fit_results[1])), 
+             np.array(fit_results[0]/a), 
+             yerr=(np.array(fit_results[1])/a), 
              fmt="rs", 
              capsize=4,
              markerfacecolor='none',)
 plt.xlabel(r"$t_\text{min}/a$")
 plt.ylabel(r"$E_0(P_z)$ (Gev)")
 # plt.ylim(0,4)
-# plt.text(15,0.141, "Pz = %.2f GeV" %phys_p(2.359, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
+# plt.text(15,0.141, "Pz = %.2f GeV" %phys_p(a, Pz), fontfamily="sans-serif", fontsize="large", fontstyle="normal")
 # plt.title(r"Fitted $E_0$ from [$t_{min}/a$, " + f"{upper_t}]")
 if save:
     plt.savefig(f"{save_path}/Pz{Pz}window_length{window}.pdf")

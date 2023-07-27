@@ -1,21 +1,29 @@
-# Author: Ethan Baker ANL/Haverford College
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import os
 from functions import phys_p, read_data
 
+"""
+Ethan Baker ANL/Haverford College
+This script performs fits to determine the raw matrix elements. It iterates 
+through both sets of smeared data and outputs the extrapolated ratios once
+the prefactor has been accounted for. There are various minus signs floating around
+to make sure the Z5 and T5 data are consistent. 
+
+"""
+
 Nt = 128
 Ns = 55
-a = 2.359
-save = True
-plot = False
+a = 1/2.359 # GeV^-1
+
+save = False
+plot = True
 t_range = np.arange(0,128)
 lower_lim = 2
 upper_lim = 7
 
-for smear_path in ["final_results", "final_results_eps10"]:
+for smear_path in ["final_results", "final_results_flow10"]:
     if smear_path == "final_results":
         smear = "05"
     else:
@@ -49,11 +57,9 @@ for smear_path in ["final_results", "final_results_eps10"]:
                 # load in data from previous fits 
                 # E0_data is from dispersion relation and E1_data is from 2 state fit
                 E1_data = np.load(f"final_results/two_state_fits/Pz{Pz}/samples.npy")
-                # plt.plot(real_ratio_means)
-                # plt.plot(imag_ratio_means)
-                # plt.show()
+
                 """
-                actual function for fitting
+                actual functions for fitting
                 spectral decomposition of DA correlator is "num" and spec. decomp.
                 of 2pt correlator is denom
                 For T5, the numerator in both should be a sinh function, for Z5, it
@@ -94,7 +100,7 @@ for smear_path in ["final_results", "final_results_eps10"]:
                 imag_popt_js = np.zeros((Ns,2))
 
                 for s in range(Ns):
-                    E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)/a
+                    E0 = np.sqrt((0.139)**2 + phys_p(a,Pz)**2)*a
                     E1 = E1_data[s,2]
                     Z0 = np.sqrt(2*E0*E1_data[s,0])
                     Z1 = np.sqrt(2*E1*E1_data[s,1])
@@ -114,7 +120,7 @@ for smear_path in ["final_results", "final_results_eps10"]:
                                                     maxfev=2000,
                                                     )
             
-                    prefactor = {"Z5": a**2*Z0/phys_p(a,Pz), "T5": a**2*Z0/(a*E0) }
+                    prefactor = {"Z5": Z0/(phys_p(a,Pz)*a**2), "T5": a*Z0/(a**2*E0) }
 
                     # calculation of extrapolated value of ratio for the matrix element and
                     # the errors propogated through errors in fitting parameters.      
@@ -140,7 +146,7 @@ for smear_path in ["final_results", "final_results_eps10"]:
 
                     t_fit = np.arange(lower_lim,upper_lim,0.01)
                     fig, axs = plt.subplots(2, 1, constrained_layout=True)
-                    fig.suptitle(f"R(t) at $N_z$=%.3f GeV and $z/a$={bz}" %phys_p(2.359,Pz))
+                    fig.suptitle(f"R(t) at $N_z$=%.3f GeV and $z/a$={bz}" %phys_p(a,Pz))
                     axs[0].errorbar(t_range[lower_lim:upper_lim], 
                                 real_ratio_means[lower_lim:upper_lim], 
                                 yerr=real_ratio_stds[lower_lim:upper_lim], 
@@ -173,7 +179,7 @@ for smear_path in ["final_results", "final_results_eps10"]:
                     axs[1].set_ylabel(r"Imag $(R(t))$")
                     if save and bz< 10:
                         plt.savefig(f"{save_path}/Pz{Pz}_m0fit_bz{bz}.png")
-                    # plt.show()
+                    plt.show()
                     plt.close()
 
         if save:

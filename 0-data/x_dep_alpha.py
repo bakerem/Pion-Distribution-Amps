@@ -1,16 +1,24 @@
-# Author Ethan Baker, ANL/Haverford College
-
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 from scipy.optimize import curve_fit
 from functions import x_dep1_m_ope, phys_p
 
+"""
+Ethan Baker, ANL/Haverford College
+
+Essentially follows the same structure as "mellin_moms.py," so for more info
+look at the documentation there. There is a slightly different fitting function
+that incorporates alpha into the Mellin moments so that it is a fitting 
+parameter. Unlike there, it is better to have the final range of bz_min/bz_max 
+here instead of running each case seperately. 
+"""
+
 Nt = 128
 Ns = 55
-a = 2.359 # GeV^-1
-P0 = 1
-gamma_E = 0.57721
+
+a = 1/2.359 # GeV^-1
+P0 = 1 # Reference Momentum
+gamma_E = 0.57721 # Euler constant
 
 bz_min_low = 2
 bz_min_up  = 3
@@ -24,10 +32,9 @@ Pz_min_up  = 6
 Pz_max_low = 9
 Pz_max_up= 10
 save = True
-plot = False
 
 # initialize empty arrays for saving data
-for smear in ["final_results","final_results_eps10"]:
+for smear in ["final_results","final_results_flow10"]:
     for init_char in ["T5"]:
         for Nh in [0]:
             for N_max in [2]:
@@ -68,10 +75,10 @@ for smear in ["final_results","final_results_eps10"]:
                                     if Nh == 0:
                                         def ratio(bzPz, alpha ):
                                             bz, Pz = bzPz_range
-                                            mu = kappa*2*np.exp(-gamma_E)/(bz/a)
+                                            mu = kappa*2*np.exp(-gamma_E)/(bz*a)
                                             alpha_s = 0.303
-                                            num   = x_dep1_m_ope(bz/a, alpha, 0, 0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char)
-                                            denom = x_dep1_m_ope(bz/a, alpha, 0, 0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char)
+                                            num   = x_dep1_m_ope(bz*a, alpha, 0, 0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char)
+                                            denom = x_dep1_m_ope(bz*a, alpha, 0, 0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char)
                                             ratio_result = num/denom
                                             return np.real(ratio_result)
                                         
@@ -83,10 +90,10 @@ for smear in ["final_results","final_results_eps10"]:
                                     elif Nh == 1:
                                         def ratio(bzPz, alpha, h0):
                                             bz, Pz = bzPz_range
-                                            mu = kappa*2*np.exp(-gamma_E)/(bz/a)
+                                            mu = kappa*2*np.exp(-gamma_E)/(bz*a)
                                             alpha_s = 0.303
-                                            num   = x_dep1_m_ope(bz/a, alpha, 0, h0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char)
-                                            denom = x_dep1_m_ope(bz/a, alpha, 0, h0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char)
+                                            num   = x_dep1_m_ope(bz*a, alpha, 0, h0, 0, 2*N_max, Nh, phys_p(a,Pz), alpha_s, mu, init_char)
+                                            denom = x_dep1_m_ope(bz*a, alpha, 0, h0, 0, 2*N_max, Nh, phys_p(a,P0), alpha_s, mu, init_char)
                                             ratio_result = num/denom
                                             return np.real(ratio_result)
                                         
@@ -113,6 +120,10 @@ for smear in ["final_results","final_results_eps10"]:
                                     chi2s[index] = chi2
 
                                     print(alpha[index], alpha_err[index], chi2)
+                                    # these are useful just as a check to make
+                                    # sure the results are reasonably close to 
+                                    # the earlier results. 
+
                                     mm2 = 1/(3+2*alpha[index])
                                     mm4 = 3/(15+16*alpha[index]+4*alpha[index]**2)
                                     # print(mm2, mm4)
