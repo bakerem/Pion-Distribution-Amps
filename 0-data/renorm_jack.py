@@ -106,12 +106,12 @@ for real in [False,True]:
 
             if real:
                 plt.legend()
-                plt.xlabel(r"$P_3z_3$")
+                plt.xlabel(r"$\lambda = P_3z_3$")
                 plt.ylabel(r"Re $\mathcal{M}$")
-                plt.xlim(0,7)
-                plt.ylim(0,1.1)
+                plt.xlim(0,4.5)
+                plt.ylim(0.5,1.1)
                 # plt.title(f"{init_conv[init_char]}")
-                plt.text(0.2, 0.2, r"$P^0_3$ " + "= %.2f GeV" %phys_p(a,P0))
+                plt.text(0.2, 0.6, r"$P^0_3$ " + "= %.2f GeV" %phys_p(a,P0))
                 if save:
                     plt.savefig(f"{save_path}/{init_char}real_renorm_multi_p_full_P0{P0}.pdf")
                 plt.show()
@@ -123,7 +123,7 @@ for real in [False,True]:
                 plt.text(0.05, 0.03, r"$P^0_3$ " + "= %.2f GeV" %phys_p(a,P0))
 
                 # plt.title(f"{init_conv[init_char]}")
-                plt.xlim(0,7)
+                plt.xlim(0,4.5)
                 plt.ylim(-0.03, 0.04)
                 plt.axhline(0,color="black", linestyle="--")
                 if save:
