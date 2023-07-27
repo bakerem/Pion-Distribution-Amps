@@ -8,7 +8,7 @@ and $x$-distribution of the pion distribution amplitude. The workflow is as foll
 3) Use this to calculate the bare matrix elements (data0/raw_el_fits.py)
 4) Renormalize bare matrix elements (data0/renorm_jack.py)
 5) Calculate Mellin moments for a set of fitting parameters (data0/mellin_moms.py)
-6) Calculate $alpha$ for the one-parameter Ansatz ($\phi(u)=u^\alpha(1-u)^\alpha$) to determine which basis to expand DA in (data0/x_dep_alpha.py)
+6) Calculate $\alpha$ for the one-parameter Ansatz ($\phi(u)=u^\alpha(1-u)^\alpha$) to determine which basis to expand DA in (data0/x_dep_alpha.py)
 7) Calculate coefficients for expansion of DA (data0/x_dep_sns.py)
 
 Modules for plotting are generally labeled as such and auxilliary functions are found in data0/functions.py
