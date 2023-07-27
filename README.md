@@ -16,3 +16,7 @@ Modules for plotting are generally labeled as such and auxilliary functions are 
 There are a couple conventions that are uninituitve. First, the quality labelled as $a$ is not the lattice spacing, but actually the inverse of the lattice spacing
 in GeV. This is due to an inital misunderstanding that has been easier to keep instead of fixing everywhere. This means that in the code where a $\times a$ should appear,
 a $/a$ appears instead. 
+
+Below is an outline of the code:
+
+![code_outline](https://github.com/bakerem/ANL/assets/96547711/f1e5cd09-384c-40b4-8258-6916747c2e44)
